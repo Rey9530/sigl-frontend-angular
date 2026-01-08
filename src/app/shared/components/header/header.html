@@ -1,0 +1,52 @@
+<div class="header-wrapper row m-0">
+  <app-search />
+  <div class="header-logo-wrapper col-auto p-0">
+    <app-header-logo [icon]="'align-center'" [type]="'header'" />
+  </div>
+
+  <div class="left-header col-xxl-5 col-xl-6 col-lg-5 col-md-4 col-sm-3 p-0">
+    <app-header-notice />
+  </div>
+
+  <div
+    class="nav-right col-xxl-7 col-xl-6 col-md-7 col-8 pull-right right-header p-0 ms-auto"
+  >
+    <ul class="nav-menus">
+      <li
+        class="language-nav"
+        (click)="toggleLanguage()"
+        (clickOutside)="clickOutside()"
+      >
+        <app-header-language />
+      </li>
+
+      <li class="fullscreen-body">
+        <app-toggle-screen />
+      </li>
+
+      <li>
+        <app-svg-icon [icon]="'search'" (click)="openSearch()" />
+      </li>
+
+      <li class="onhover-dropdown">
+        <app-header-bookmark />
+      </li>
+
+      <li>
+        <app-mode />
+      </li>
+
+      <li class="cart-nav onhover-dropdown">
+        <app-header-cart />
+      </li>
+
+      <li class="onhover-dropdown">
+        <app-header-notification />
+      </li>
+
+      <li class="profile-nav onhover-dropdown pe-0 py-0">
+        <app-profile />
+      </li>
+    </ul>
+  </div>
+</div>

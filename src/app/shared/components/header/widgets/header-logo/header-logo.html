@@ -1,0 +1,36 @@
+<div class="logo-wrapper">
+  <a href="javascript:void(0)" [routerLink]="['/']">
+    <img
+      class="img-fluid for-light"
+      src="assets/images/logo/logo.png"
+      alt="logo"
+    />
+    <img
+      class="img-fluid for-dark"
+      src="assets/images/logo/logo_dark.png"
+      alt="logo"
+    />
+  </a>
+
+  @if (type() === "sidebar") {
+    <ng-content select="[icon]" />
+
+    <div class="toggle-sidebar" (click)="toggleSidebar()">
+      <app-feather-icon
+        [icon]="icon()"
+        [class]="'status_toggle middle sidebar-toggle'"
+      />
+    </div>
+  }
+</div>
+
+@if (type() === "header") {
+  <ng-content />
+
+  <div class="toggle-sidebar" (click)="toggleSidebar()">
+    <app-feather-icon
+      [icon]="icon()"
+      [class]="'status_toggle middle sidebar-toggle'"
+    />
+  </div>
+}

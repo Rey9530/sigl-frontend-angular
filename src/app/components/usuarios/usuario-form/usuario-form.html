@@ -1,0 +1,97 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12 col-lg-8 col-xl-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{ isEditMode ? 'Editar Usuario' : 'Nuevo Usuario' }}</h5>
+        </div>
+        <div class="card-body">
+          @if (loading) {
+            <div class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          } @else {
+            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+              <div class="mb-3">
+                <label class="form-label">Nombre *</label>
+                <input type="text" class="form-control" formControlName="nombre"
+                       [ngClass]="{'is-invalid': form.get('nombre')?.touched && form.get('nombre')?.invalid}">
+                @if (form.get('nombre')?.touched && form.get('nombre')?.errors?.['required']) {
+                  <div class="invalid-feedback">El nombre es requerido</div>
+                }
+                @if (form.get('nombre')?.touched && form.get('nombre')?.errors?.['minlength']) {
+                  <div class="invalid-feedback">El nombre debe tener al menos 2 caracteres</div>
+                }
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-control" formControlName="email"
+                       [ngClass]="{'is-invalid': form.get('email')?.touched && form.get('email')?.invalid}">
+                @if (form.get('email')?.touched && form.get('email')?.errors?.['required']) {
+                  <div class="invalid-feedback">El email es requerido</div>
+                }
+                @if (form.get('email')?.touched && form.get('email')?.errors?.['email']) {
+                  <div class="invalid-feedback">Email invalido</div>
+                }
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">
+                  Contrasena {{ isEditMode ? '(dejar vacio para mantener)' : '*' }}
+                </label>
+                <input type="password" class="form-control" formControlName="password"
+                       [ngClass]="{'is-invalid': form.get('password')?.touched && form.get('password')?.invalid}">
+                @if (form.get('password')?.touched && form.get('password')?.errors?.['required']) {
+                  <div class="invalid-feedback">La contrasena es requerida</div>
+                }
+                @if (form.get('password')?.touched && form.get('password')?.errors?.['minlength']) {
+                  <div class="invalid-feedback">La contrasena debe tener al menos 6 caracteres</div>
+                }
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Rol *</label>
+                <select class="form-select" formControlName="rol"
+                        [ngClass]="{'is-invalid': form.get('rol')?.touched && form.get('rol')?.invalid}">
+                  <option value="">Seleccione un rol</option>
+                  @for (rol of roles; track rol) {
+                    <option [value]="rol">{{ RolLabels[rol] }}</option>
+                  }
+                </select>
+                @if (form.get('rol')?.touched && form.get('rol')?.errors?.['required']) {
+                  <div class="invalid-feedback">El rol es requerido</div>
+                }
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Telefono</label>
+                <input type="text" class="form-control" formControlName="telefono">
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label">Punto ID</label>
+                <input type="number" class="form-control" formControlName="punto_id">
+                <small class="text-muted">ID del punto asignado (opcional)</small>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" [disabled]="submitting">
+                  @if (submitting) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                  }
+                  {{ isEditMode ? 'Actualizar' : 'Crear' }}
+                </button>
+                <button type="button" class="btn btn-secondary" (click)="cancelar()">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
