@@ -24,6 +24,13 @@ export const menuItems: IMenu[] = [
     path: "/usuarios",
     level: 1,
   },
+  {
+    title: "Puntos de Servicio",
+    icon: "map-pin",
+    type: "link",
+    path: "/puntos",
+    level: 1,
+  },
 ];
 
 // Array

@@ -1,0 +1,88 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5>Puntos de Servicio</h5>
+          @if (canEdit()) {
+            <button class="btn btn-primary" (click)="nuevoPunto()">
+              <i class="fa fa-plus me-2"></i>Nuevo Punto
+            </button>
+          }
+        </div>
+        <div class="card-body">
+          @if (loading) {
+            <div class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Codigo</th>
+                    <th>Nombre</th>
+                    <th>Ciudad</th>
+                    <th>Departamento</th>
+                    <th>Telefono</th>
+                    <th>Usuarios</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (punto of puntos; track punto.id_punto) {
+                    <tr>
+                      <td>
+                        <span class="badge bg-secondary">{{ punto.codigo }}</span>
+                      </td>
+                      <td>{{ punto.nombre }}</td>
+                      <td>{{ punto.ciudad || '-' }}</td>
+                      <td>{{ punto.departamento || '-' }}</td>
+                      <td>{{ punto.telefono || '-' }}</td>
+                      <td>
+                        <span class="badge bg-info">
+                          {{ punto._count?.usuarios || 0 }} usuarios
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge" [ngClass]="punto.activo ? 'bg-success' : 'bg-warning'">
+                          {{ punto.activo ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </td>
+                      <td>
+                        @if (canEdit()) {
+                          <button class="btn btn-sm btn-outline-primary me-1"
+                                  (click)="editarPunto(punto.id_punto)"
+                                  title="Editar">
+                            <i class="fa fa-edit"></i>
+                          </button>
+                        }
+                        @if (canDelete() || !punto.activo) {
+                          <button class="btn btn-sm"
+                                  [ngClass]="punto.activo ? 'btn-outline-danger' : 'btn-outline-success'"
+                                  (click)="toggleEstado(punto)"
+                                  [title]="punto.activo ? 'Desactivar' : 'Activar'">
+                            <i class="fa" [ngClass]="punto.activo ? 'fa-ban' : 'fa-check'"></i>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="8" class="text-center py-4">
+                        No hay puntos registrados
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

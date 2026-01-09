@@ -42,4 +42,35 @@ export const content: Routes = [
     loadComponent: () =>
       import("../../components/usuarios/usuario-form/usuario-form").then((m) => m.UsuarioForm),
   },
+  // Puntos routes
+  {
+    path: "puntos",
+    data: {
+      title: "Puntos de Servicio",
+      breadcrumb: "Puntos",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/puntos/puntos-list/puntos-list").then((m) => m.PuntosList),
+  },
+  {
+    path: "puntos/nuevo",
+    data: {
+      title: "Nuevo Punto",
+      breadcrumb: "Nuevo Punto",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/puntos/punto-form/punto-form").then((m) => m.PuntoForm),
+  },
+  {
+    path: "puntos/editar/:id",
+    data: {
+      title: "Editar Punto",
+      breadcrumb: "Editar Punto",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/puntos/punto-form/punto-form").then((m) => m.PuntoForm),
+  },
 ];
