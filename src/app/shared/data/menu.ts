@@ -13,24 +13,30 @@ export const menuItems: IMenu[] = [
     path: "/home",
     level: 1,
     active: true,
-  },
+  }, 
+
   {
-    main_title: "Administracion",
-  },
-  {
-    title: "Usuarios",
-    icon: "user",
-    type: "link",
-    path: "/usuarios",
+    title: 'Administracion',
+    id: 'administracion',
+    icon: 'widget',
+    type: 'sub',
+    active: false,
     level: 1,
-  },
-  {
-    title: "Puntos de Servicio",
-    icon: "map-pin",
-    type: "link",
-    path: "/puntos",
-    level: 1,
-  },
+    children: [
+      {
+        title: 'Usuarios',
+        path: '/usuarios',
+        type: 'link',
+        id: 'general-widgets',
+      },
+      {
+        title: 'Puntos de Servicio',
+        path: '/puntos',
+        type: 'link',
+        id: 'chart-widgets',
+      },
+    ],
+  }, 
 ];
 
 // Array

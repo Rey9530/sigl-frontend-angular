@@ -1,59 +1,56 @@
-# CubaAngular
+# Sistema Logistico - Frontend Angular
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.0.
+Frontend del Sistema Logistico desarrollado con Angular 20.
 
-## Development server
+## Requisitos
 
-To start a local development server, run:
+- Node.js 18+
+- Angular CLI 20.1.0
+
+## Instalacion
+
+```bash
+npm install
+```
+
+## Servidor de Desarrollo
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Abrir navegador en `http://localhost:4200/`
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+## Build de Produccion
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Los archivos se generan en el directorio `dist/`.
 
-## Running unit tests
+## Estructura del Proyecto
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+```
+src/app/
+├── core/                    # Servicios, modelos, guards, interceptors
+│   ├── models/              # Interfaces y tipos
+│   ├── services/            # Servicios HTTP
+│   ├── guards/              # Guards de rutas
+│   └── interceptors/        # Interceptors HTTP
+├── components/              # Componentes de la aplicacion
+│   ├── usuarios/            # Modulo de usuarios
+│   ├── puntos/              # Modulo de puntos de servicio
+│   └── ...
+├── shared/                  # Componentes y utilidades compartidas
+└── layouts/                 # Layouts de la aplicacion
 ```
 
-## Running end-to-end tests
+## Modulos Principales
 
-For end-to-end (e2e) testing, run:
+- **Usuarios**: Gestion de usuarios del sistema (CRUD con modal)
+- **Puntos**: Gestion de puntos de servicio (CRUD con modal)
 
-```bash
-ng e2e
-```
+## Documentacion
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- [Normas de Desarrollo](./NORMAS_DESARROLLO.md) - Reglas y convenciones para el desarrollo
