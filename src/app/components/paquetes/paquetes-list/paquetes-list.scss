@@ -28,3 +28,11 @@
     font-size: 0.875rem;
   }
 }
+
+// Estilos para modo oscuro
+:host-context(body.dark-only) {
+  .badge.bg-light {
+    background-color: #374558 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+}

@@ -83,3 +83,27 @@
     font-size: 0.9rem;
   }
 }
+
+// Estilos para modo oscuro
+:host-context(body.dark-only) {
+  .timeline-content {
+    background-color: #262932;
+    color: rgba(255, 255, 255, 0.8);
+
+    p {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    small, .text-muted {
+      color: #98a6ad !important;
+    }
+  }
+
+  .timeline::before {
+    background-color: #374558;
+  }
+
+  .timeline-marker {
+    background-color: #374558;
+  }
+}

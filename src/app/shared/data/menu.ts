@@ -14,28 +14,33 @@ export const menuItems: IMenu[] = [
     level: 1,
     active: true,
   },
+  // {
+  //   main_title: "",
+  // },
+
   {
-    main_title: "Operaciones",
-  },
-  {
-    title: "Recepciones",
-    icon: "inbox",
-    type: "link",
-    path: "/recepciones",
-    level: 1,
+    title: 'Operaciones',
+    id: 'operaciones',
+    icon: 'package',
+    type: 'sub',
     active: false,
-  },
-  {
-    title: "Paquetes",
-    icon: "package",
-    type: "link",
-    path: "/paquetes",
     level: 1,
-    active: false,
+    children: [
+      {
+        title: "Recepciones", 
+        path: "/recepciones",
+        id: 'general-widgets',
+      },
+      {
+        title: "Paquetes", 
+        path: "/paquetes",
+        id: 'chart-widgets',
+      },
+    ],
   },
-  {
-    main_title: "Sistema",
-  },
+  // {
+  //   main_title: "Sistema",
+  // },
   {
     title: 'Administracion',
     id: 'administracion',
