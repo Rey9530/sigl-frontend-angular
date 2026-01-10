@@ -1,0 +1,17 @@
+.badge {
+  font-weight: 500;
+
+  &.badge-sm {
+    font-size: 0.7rem;
+    padding: 0.2em 0.4em;
+  }
+
+  &.badge-lg {
+    font-size: 1rem;
+    padding: 0.5em 0.8em;
+  }
+
+  i.fa-circle {
+    font-size: 0.5em;
+  }
+}

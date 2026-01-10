@@ -13,8 +13,29 @@ export const menuItems: IMenu[] = [
     path: "/home",
     level: 1,
     active: true,
-  }, 
-
+  },
+  {
+    main_title: "Operaciones",
+  },
+  {
+    title: "Recepciones",
+    icon: "inbox",
+    type: "link",
+    path: "/recepciones",
+    level: 1,
+    active: false,
+  },
+  {
+    title: "Paquetes",
+    icon: "package",
+    type: "link",
+    path: "/paquetes",
+    level: 1,
+    active: false,
+  },
+  {
+    main_title: "Sistema",
+  },
   {
     title: 'Administracion',
     id: 'administracion',
@@ -36,7 +57,7 @@ export const menuItems: IMenu[] = [
         id: 'chart-widgets',
       },
     ],
-  }, 
+  },
 ];
 
 // Array

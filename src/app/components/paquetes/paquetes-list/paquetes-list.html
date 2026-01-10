@@ -1,0 +1,215 @@
+<div class="container-fluid">
+  <!-- Estadisticas -->
+  @if (estadisticas) {
+    <div class="row mb-4">
+      <div class="col-md-2 col-sm-4 mb-3">
+        <div class="card bg-info text-white">
+          <div class="card-body text-center py-2">
+            <h4 class="mb-0">{{ getEstadisticaPorEstado(EstadoPaquete.RECIBIDO_ORIGEN) }}</h4>
+            <small>Recibidos</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 mb-3">
+        <div class="card bg-primary text-white">
+          <div class="card-body text-center py-2">
+            <h4 class="mb-0">{{ getEstadisticaPorEstado(EstadoPaquete.EN_TRANSITO) }}</h4>
+            <small>En Transito</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 mb-3">
+        <div class="card bg-warning text-dark">
+          <div class="card-body text-center py-2">
+            <h4 class="mb-0">{{ getEstadisticaPorEstado(EstadoPaquete.LLEGO_DESTINO) }}</h4>
+            <small>En Destino</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 mb-3">
+        <div class="card bg-success text-white">
+          <div class="card-body text-center py-2">
+            <h4 class="mb-0">{{ getEstadisticaPorEstado(EstadoPaquete.ENTREGADO) }}</h4>
+            <small>Entregados</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 mb-3">
+        <div class="card bg-secondary text-white">
+          <div class="card-body text-center py-2">
+            <h4 class="mb-0">{{ getEstadisticaPorEstado(EstadoPaquete.EN_DEVOLUCION) + getEstadisticaPorEstado(EstadoPaquete.DEVUELTO) }}</h4>
+            <small>Devoluciones</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 mb-3">
+        <div class="card bg-dark text-white">
+          <div class="card-body text-center py-2">
+            <h4 class="mb-0">{{ estadisticas.total }}</h4>
+            <small>Total</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lista de Paquetes -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">Paquetes</h5>
+            <div class="d-flex gap-2 flex-wrap">
+              <!-- Buscar por codigo -->
+              <div class="input-group input-group-sm" style="width: 200px;">
+                <input type="text" class="form-control" placeholder="Codigo rastreo..."
+                       [(ngModel)]="filtroCodigo" (keyup.enter)="buscarPorCodigo()">
+                <button class="btn btn-outline-secondary" type="button" (click)="buscarPorCodigo()">
+                  <i class="fa fa-search"></i>
+                </button>
+              </div>
+
+              <!-- Filtro Punto Origen -->
+              <select class="form-select form-select-sm" style="width: auto;"
+                      [(ngModel)]="filtroPuntoOrigen" (ngModelChange)="onFiltroChange()">
+                <option [ngValue]="null">Origen: Todos</option>
+                @for (punto of puntosServicio; track punto.id_punto) {
+                  <option [ngValue]="punto.id_punto">{{ punto.nombre }}</option>
+                }
+              </select>
+
+              <!-- Filtro Punto Destino -->
+              <select class="form-select form-select-sm" style="width: auto;"
+                      [(ngModel)]="filtroPuntoDestino" (ngModelChange)="onFiltroChange()">
+                <option [ngValue]="null">Destino: Todos</option>
+                @for (punto of puntosServicio; track punto.id_punto) {
+                  <option [ngValue]="punto.id_punto">{{ punto.nombre }}</option>
+                }
+              </select>
+
+              <!-- Filtro Estado -->
+              <select class="form-select form-select-sm" style="width: auto;"
+                      [(ngModel)]="filtroEstado" (ngModelChange)="onFiltroChange()">
+                <option value="">Todos los estados</option>
+                <option [value]="EstadoPaquete.RECIBIDO_ORIGEN">Recibidos</option>
+                <option [value]="EstadoPaquete.EN_TRANSITO">En Transito</option>
+                <option [value]="EstadoPaquete.LLEGO_DESTINO">En Destino</option>
+                <option [value]="EstadoPaquete.ENTREGADO">Entregados</option>
+                <option [value]="EstadoPaquete.EN_DEVOLUCION">En Devolucion</option>
+                <option [value]="EstadoPaquete.DEVUELTO">Devueltos</option>
+                <option [value]="EstadoPaquete.CANCELADO">Cancelados</option>
+              </select>
+
+              <!-- Limpiar filtros -->
+              <button class="btn btn-outline-secondary btn-sm" (click)="limpiarFiltros()" title="Limpiar filtros">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          @if (loading) {
+            <div class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Codigo</th>
+                    <th>Remitente</th>
+                    <th>Destinatario</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-end">Costo</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (paquete of paquetes; track paquete.id_paquete) {
+                    <tr>
+                      <td>
+                        <span class="badge bg-light text-dark font-monospace">{{ paquete.codigo_rastreo }}</span>
+                      </td>
+                      <td>
+                        <div class="fw-medium">{{ paquete.remitente_nombre }}</div>
+                        <small class="text-muted">{{ paquete.remitente_telefono }}</small>
+                      </td>
+                      <td>
+                        <div class="fw-medium">{{ paquete.destinatario_nombre }}</div>
+                        <small class="text-muted">{{ paquete.destinatario_telefono }}</small>
+                      </td>
+                      <td>
+                        <span class="badge bg-secondary">{{ paquete.punto_origen.nombre }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-secondary">{{ paquete.punto_destino.nombre }}</span>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge" [ngClass]="EstadoPaqueteColors[paquete.estado_actual]">
+                          {{ EstadoPaqueteLabels[paquete.estado_actual] }}
+                        </span>
+                      </td>
+                      <td class="text-end">
+                        <span class="fw-medium">${{ paquete.costo_envio | number:'1.2-2' }}</span>
+                        @if (paquete.valor_paquete) {
+                          <br><small class="text-muted">Valor: ${{ paquete.valor_paquete | number:'1.2-2' }}</small>
+                        }
+                      </td>
+                      <td>
+                        <small>{{ formatDate(paquete.creado_en) }}</small>
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary me-1"
+                                (click)="verDetalle(paquete)"
+                                title="Ver detalle">
+                          <i class="fa fa-eye"></i>
+                        </button>
+                        @if (paquete.imagen_vineta_url) {
+                          <button class="btn btn-sm btn-outline-secondary"
+                                  (click)="abrirImagenModal(paquete.imagen_vineta_url)"
+                                  title="Ver imagen">
+                            <i class="fa fa-image"></i>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="9" class="text-center py-4">
+                        <i class="fa fa-box fa-3x text-muted mb-3"></i>
+                        <p class="mb-0">No hay paquetes registrados</p>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Imagen -->
+<ng-template #imagenModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Imagen de Vineta</h5>
+    <button type="button" class="btn-close" (click)="cerrarImagenModal()"></button>
+  </div>
+  <div class="modal-body text-center p-2">
+    @if (imagenSeleccionada) {
+      <img [src]="imagenSeleccionada"
+           alt="Vineta"
+           class="img-fluid"
+           style="max-height: 80vh; width: auto;">
+    }
+  </div>
+</ng-template>

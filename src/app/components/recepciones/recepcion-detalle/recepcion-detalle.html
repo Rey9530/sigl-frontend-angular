@@ -1,0 +1,236 @@
+<div class="container-fluid">
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+  } @else if (recepcion) {
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-outline-secondary" (click)="volver()">
+          <i class="fa fa-arrow-left me-1"></i> Volver
+        </button>
+        <h4 class="mb-0">Recepcion #{{ recepcion.id_recepcion }}</h4>
+        <span class="badge bg-info">{{ EstadoRecepcionLabels[recepcion.estado] }}</span>
+      </div>
+      @if (puedeEditar()) {
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-danger" (click)="abrirModalDescartar()">
+            <i class="fa fa-trash me-1"></i> Descartar
+          </button>
+          @if (puedeConvertir()) {
+            <button class="btn btn-success" (click)="abrirModalConvertir()">
+              <i class="fa fa-box me-1"></i> Convertir a Paquete
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="row">
+      <!-- Imagen -->
+      <div class="col-12 col-lg-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Imagen de Vineta</h6>
+            <small class="text-muted"><i class="fa fa-search-plus me-1"></i>Click para ampliar</small>
+          </div>
+          <div class="card-body text-center p-2">
+            @if (recepcion.imagen_url) {
+              <img [src]="recepcion.imagen_url"
+                   alt="Vineta"
+                   class="img-fluid rounded shadow-sm img-clickable"
+                   style="width: 100%; max-height: 500px; object-fit: contain; cursor: pointer;"
+                   (click)="abrirImagenModal()"
+                   title="Click para ver en grande">
+            } @else {
+              <div class="bg-light p-5 rounded">
+                <i class="fa fa-image fa-4x text-muted"></i>
+                <p class="mt-2 mb-0 text-muted">Sin imagen</p>
+              </div>
+            }
+          </div>
+          <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted">Confianza Global:</span>
+              <div class="d-flex align-items-center gap-2" style="flex: 1; max-width: 200px; margin-left: 16px;">
+                <div class="progress flex-grow-1" style="height: 20px;">
+                  <div class="progress-bar" [ngClass]="getProgressColor()"
+                       role="progressbar"
+                       [style.width.%]="recepcion.confianza_global">
+                    {{ recepcion.confianza_global }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario OCR -->
+      <div class="col-12 col-lg-6 mb-4">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Datos Extraidos (OCR)</h6>
+            @if (puedeEditar()) {
+              <button class="btn btn-primary btn-sm" (click)="guardarCambios()" [disabled]="saving">
+                @if (saving) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                }
+                <i class="fa fa-save me-1"></i> Guardar Cambios
+              </button>
+            }
+          </div>
+          <div class="card-body">
+            <form [formGroup]="form">
+              <div class="row">
+                @for (campo of CamposOCR; track campo.key) {
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                      <span>{{ campo.label }}</span>
+                      <app-confidence-badge [confianza]="getConfianzaCampo(campo.key)" size="sm"></app-confidence-badge>
+                    </label>
+                    @if (campo.type === 'number') {
+                      <input type="number"
+                             step="0.01"
+                             class="form-control"
+                             [formControlName]="campo.key"
+                             [readonly]="!puedeEditar()"
+                             [class.bg-light]="!puedeEditar()">
+                    } @else {
+                      <input [type]="campo.type"
+                             class="form-control"
+                             [formControlName]="campo.key"
+                             [readonly]="!puedeEditar()"
+                             [class.bg-light]="!puedeEditar()">
+                    }
+                  </div>
+                }
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Info adicional -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h6 class="mb-0">Informacion</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-2">
+                  <strong>Punto de Servicio:</strong><br>
+                  <span class="badge bg-secondary">{{ recepcion.punto_servicio.nombre }}</span>
+                </p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-2">
+                  <strong>Fecha de Creacion:</strong><br>
+                  {{ recepcion.creado_en | date:'dd/MM/yyyy HH:mm' }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Modal Convertir a Paquete -->
+<ng-template #convertirModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Convertir a Paquete</h5>
+    <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="text-muted mb-4">
+      Al convertir esta recepcion se creara un paquete con codigo de rastreo.
+    </p>
+
+    <div class="mb-3">
+      <label class="form-label">Punto de Destino *</label>
+      <select class="form-select" [(ngModel)]="puntoDestinoId">
+        <option [ngValue]="null">Seleccione un punto de destino</option>
+        @for (punto of puntosDestino; track punto.id_punto) {
+          <option [ngValue]="punto.id_punto">
+            {{ punto.nombre }} ({{ punto.codigo }})
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Descripcion del Paquete</label>
+      <input type="text" class="form-control" [(ngModel)]="descripcionPaquete"
+             placeholder="Ej: Caja pequena, sobre, etc.">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Notas</label>
+      <textarea class="form-control" rows="2" [(ngModel)]="notasPaquete"
+                placeholder="Notas adicionales para el paquete"></textarea>
+    </div>
+
+    <div class="alert alert-info">
+      <i class="fa fa-info-circle me-2"></i>
+      Los datos del remitente, destinatario y costos se tomaran de los campos OCR editados.
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+    <button type="button" class="btn btn-success" (click)="confirmarConversion()" [disabled]="converting || !puntoDestinoId">
+      @if (converting) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      <i class="fa fa-box me-1"></i> Crear Paquete
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal Descartar -->
+<ng-template #descartarModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Descartar Recepcion</h5>
+    <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="text-danger">
+      <i class="fa fa-exclamation-triangle me-2"></i>
+      Esta accion no se puede deshacer.
+    </p>
+    <div class="mb-3">
+      <label class="form-label">Motivo del descarte *</label>
+      <textarea class="form-control" rows="3" [(ngModel)]="motivoDescarte"
+                placeholder="Ingrese el motivo por el cual se descarta esta recepcion"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+    <button type="button" class="btn btn-danger" (click)="confirmarDescarte()" [disabled]="discarding || !motivoDescarte.trim()">
+      @if (discarding) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      Descartar
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal Imagen Grande -->
+<ng-template #imagenModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Imagen de Vineta</h5>
+    <button type="button" class="btn-close" (click)="cerrarImagenModal()"></button>
+  </div>
+  <div class="modal-body text-center p-2" style="background-color: #f8f9fa;">
+    @if (recepcion && recepcion.imagen_url) {
+      <img [src]="recepcion.imagen_url"
+           alt="Vineta"
+           class="img-fluid"
+           style="max-height: 85vh; width: auto;">
+    }
+  </div>
+</ng-template>

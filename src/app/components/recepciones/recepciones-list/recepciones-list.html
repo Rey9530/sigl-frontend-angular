@@ -1,0 +1,204 @@
+<div class="container-fluid">
+  <!-- Estadisticas -->
+  @if (estadisticas) {
+    <div class="row mb-4">
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-warning text-dark">
+          <div class="card-body text-center">
+            <h3 class="mb-1">{{ estadisticas.pendientes_revision }}</h3>
+            <small>Pendientes Revision</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-danger text-white">
+          <div class="card-body text-center">
+            <h3 class="mb-1">{{ estadisticas.por_rango_confianza.baja_0_50 }}</h3>
+            <small>Confianza Baja (&lt;50%)</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-info text-white">
+          <div class="card-body text-center">
+            <h3 class="mb-1">{{ estadisticas.por_rango_confianza.media_50_80 }}</h3>
+            <small>Confianza Media (50-80%)</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-success text-white">
+          <div class="card-body text-center">
+            <h3 class="mb-1">{{ estadisticas.por_rango_confianza.alta_80_100 }}</h3>
+            <small>Confianza Alta (&gt;80%)</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lista de Recepciones -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5>Recepciones</h5>
+          <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" style="width: auto;"
+                    [(ngModel)]="filtroPuntoServicio" (ngModelChange)="onFiltroPuntoChange()">
+              <option [ngValue]="null">Todos los puntos</option>
+              @for (punto of puntosServicio; track punto.id_punto) {
+                <option [ngValue]="punto.id_punto">{{ punto.nombre }}</option>
+              }
+            </select>
+            <select class="form-select form-select-sm" style="width: auto;"
+                    [(ngModel)]="filtroEstado" (ngModelChange)="onFiltroChange()">
+              <option value="">Todos</option>
+              <option [value]="EstadoRecepcion.PENDIENTE_REVISION">Pendientes</option>
+              <option [value]="EstadoRecepcion.REVISION_PARCIAL">En Revision</option>
+              <option [value]="EstadoRecepcion.VALIDADO">Validados</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          @if (loading) {
+            <div class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th style="width: 80px;">Imagen</th>
+                    <th>Cliente</th>
+                    <th>Destino</th>
+                    <th>Punto Servicio</th>
+                    <th class="text-center">Confianza</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (recepcion of recepciones; track recepcion.id_recepcion) {
+                    <tr>
+                      <td>
+                        @if (recepcion.imagen_url) {
+                          <img [src]="recepcion.imagen_url"
+                               alt="Vineta"
+                               class="img-thumbnail img-clickable"
+                               style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                               (click)="abrirImagenModal(recepcion.imagen_url)"
+                               (error)="$event.target.src = 'assets/images/placeholder.png'"
+                               title="Click para ampliar">
+                        } @else {
+                          <div class="bg-light d-flex align-items-center justify-content-center"
+                               style="width: 60px; height: 60px;">
+                            <i class="fa fa-image text-muted"></i>
+                          </div>
+                        }
+                      </td>
+                      <td>
+                        <div class="fw-medium">{{ recepcion.cliente || '-' }}</div>
+                        @if (recepcion.telefono) {
+                          <small class="text-muted">{{ recepcion.telefono }}</small>
+                        }
+                      </td>
+                      <td>{{ recepcion.destino || '-' }}</td>
+                      <td>
+                        <span class="badge bg-secondary">{{ recepcion.punto_servicio.nombre }}</span>
+                      </td>
+                      <td class="text-center">
+                        <app-confidence-badge [confianza]="recepcion.confianza_global"></app-confidence-badge>
+                      </td>
+                      <td>
+                        <span class="badge" [ngClass]="EstadoRecepcionColors[recepcion.estado]">
+                          {{ EstadoRecepcionLabels[recepcion.estado] }}
+                        </span>
+                      </td>
+                      <td>
+                        <small>{{ formatDate(recepcion.creado_en) }}</small>
+                      </td>
+                      <td>
+                        @if (puedeEditar(recepcion)) {
+                          <button class="btn btn-sm btn-outline-primary me-1"
+                                  (click)="verDetalle(recepcion)"
+                                  title="Ver/Editar">
+                            <i class="fa fa-eye"></i>
+                          </button>
+                          <button class="btn btn-sm btn-outline-danger"
+                                  (click)="abrirModalDescartar(recepcion)"
+                                  title="Descartar">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        } @else {
+                          <button class="btn btn-sm btn-outline-secondary"
+                                  (click)="verDetalle(recepcion)"
+                                  title="Ver">
+                            <i class="fa fa-eye"></i>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="8" class="text-center py-4">
+                        <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="mb-0">No hay recepciones registradas</p>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Descartar -->
+<ng-template #descartarModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Descartar Recepcion</h5>
+    <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  </div>
+  <div class="modal-body">
+    <p>Esta accion no se puede deshacer. La recepcion sera marcada como descartada.</p>
+    <div class="mb-3">
+      <label class="form-label">Motivo del descarte *</label>
+      <textarea class="form-control" rows="3"
+                [(ngModel)]="motivoDescarte"
+                placeholder="Ingrese el motivo por el cual se descarta esta recepcion"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+    <button type="button" class="btn btn-danger" (click)="confirmarDescarte()" [disabled]="descartando">
+      @if (descartando) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      Descartar
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal Imagen -->
+<ng-template #imagenModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Imagen de Vineta</h5>
+    <button type="button" class="btn-close" (click)="cerrarImagenModal()"></button>
+  </div>
+  <div class="modal-body text-center p-2">
+    @if (imagenSeleccionada) {
+      <img [src]="imagenSeleccionada"
+           alt="Vineta"
+           class="img-fluid"
+           style="max-height: 80vh; width: auto;">
+    }
+  </div>
+</ng-template>

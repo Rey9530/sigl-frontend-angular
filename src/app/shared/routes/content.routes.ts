@@ -32,4 +32,44 @@ export const content: Routes = [
     loadComponent: () =>
       import("../../components/puntos/puntos-list/puntos-list").then((m) => m.PuntosList),
   },
+  {
+    path: "recepciones",
+    data: {
+      title: "Recepciones",
+      breadcrumb: "Recepciones",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR, Rol.EMPLEADO_PUNTO])],
+    loadComponent: () =>
+      import("../../components/recepciones/recepciones-list/recepciones-list").then((m) => m.RecepcionesList),
+  },
+  {
+    path: "recepciones/:id",
+    data: {
+      title: "Detalle Recepcion",
+      breadcrumb: "Detalle",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR, Rol.EMPLEADO_PUNTO])],
+    loadComponent: () =>
+      import("../../components/recepciones/recepcion-detalle/recepcion-detalle").then((m) => m.RecepcionDetalle),
+  },
+  {
+    path: "paquetes",
+    data: {
+      title: "Paquetes",
+      breadcrumb: "Paquetes",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR, Rol.EMPLEADO_PUNTO])],
+    loadComponent: () =>
+      import("../../components/paquetes/paquetes-list/paquetes-list").then((m) => m.PaquetesList),
+  },
+  {
+    path: "paquetes/:id",
+    data: {
+      title: "Detalle Paquete",
+      breadcrumb: "Detalle",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR, Rol.EMPLEADO_PUNTO])],
+    loadComponent: () =>
+      import("../../components/paquetes/paquete-detalle/paquete-detalle").then((m) => m.PaqueteDetalle),
+  },
 ];

@@ -1,0 +1,30 @@
+.card {
+  .card-header {
+    h5 {
+      font-weight: 600;
+    }
+  }
+}
+
+.font-monospace {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+}
+
+.table {
+  th {
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+}
+
+.input-group-sm {
+  .form-control {
+    font-size: 0.875rem;
+  }
+}

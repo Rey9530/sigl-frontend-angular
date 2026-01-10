@@ -1,0 +1,230 @@
+<div class="container-fluid">
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+  } @else if (paquete) {
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-outline-secondary" (click)="volver()">
+          <i class="fa fa-arrow-left me-1"></i> Volver
+        </button>
+        <div>
+          <h4 class="mb-0">
+            <span class="badge bg-light text-dark font-monospace me-2">{{ paquete.codigo_rastreo }}</span>
+          </h4>
+        </div>
+        <span class="badge fs-6" [ngClass]="EstadoPaqueteColors[paquete.estado_actual]">
+          {{ EstadoPaqueteLabels[paquete.estado_actual] }}
+        </span>
+      </div>
+      @if (puedeEditarEstado()) {
+        <button class="btn btn-primary" (click)="abrirModalCambiarEstado()">
+          <i class="fa fa-exchange-alt me-1"></i> Cambiar Estado
+        </button>
+      }
+    </div>
+
+    <div class="row">
+      <!-- Columna Izquierda: Informacion del Paquete -->
+      <div class="col-12 col-lg-6 mb-4">
+        <!-- Datos Remitente/Destinatario -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="mb-0">Informacion del Envio</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6 class="text-muted mb-2"><i class="fa fa-user me-2"></i>Remitente</h6>
+                <p class="mb-1 fw-medium">{{ paquete.remitente_nombre }}</p>
+                <p class="mb-1"><i class="fa fa-phone me-2 text-muted"></i>{{ paquete.remitente_telefono }}</p>
+                @if (paquete.remitente_dui) {
+                  <p class="mb-0"><i class="fa fa-id-card me-2 text-muted"></i>{{ paquete.remitente_dui }}</p>
+                }
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6 class="text-muted mb-2"><i class="fa fa-user-check me-2"></i>Destinatario</h6>
+                <p class="mb-1 fw-medium">{{ paquete.destinatario_nombre }}</p>
+                <p class="mb-0"><i class="fa fa-phone me-2 text-muted"></i>{{ paquete.destinatario_telefono }}</p>
+              </div>
+            </div>
+            <hr>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6 class="text-muted mb-2"><i class="fa fa-map-marker me-2"></i>Punto Origen</h6>
+                <p class="mb-1 fw-medium">{{ paquete.punto_origen.nombre }}</p>
+                <p class="mb-0 text-muted">{{ paquete.punto_origen.ciudad }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6 class="text-muted mb-2"><i class="fa fa-flag-checkered me-2"></i>Punto Destino</h6>
+                <p class="mb-1 fw-medium">{{ paquete.punto_destino.nombre }}</p>
+                <p class="mb-0 text-muted">{{ paquete.punto_destino.ciudad }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Valores y Descripcion -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="mb-0">Detalles del Paquete</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6">
+                <p class="text-muted mb-1">Costo de Envio</p>
+                <h4 class="text-primary">${{ paquete.costo_envio | number:'1.2-2' }}</h4>
+              </div>
+              <div class="col-6">
+                <p class="text-muted mb-1">Valor del Paquete</p>
+                <h4>
+                  @if (paquete.valor_paquete) {
+                    ${{ paquete.valor_paquete | number:'1.2-2' }}
+                  } @else {
+                    <span class="text-muted">-</span>
+                  }
+                </h4>
+              </div>
+            </div>
+            @if (paquete.descripcion) {
+              <hr>
+              <p class="text-muted mb-1">Descripcion</p>
+              <p class="mb-0">{{ paquete.descripcion }}</p>
+            }
+            @if (paquete.notas) {
+              <hr>
+              <p class="text-muted mb-1">Notas</p>
+              <p class="mb-0">{{ paquete.notas }}</p>
+            }
+          </div>
+        </div>
+
+        <!-- Imagen Vineta -->
+        @if (paquete.imagen_vineta_url) {
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Imagen de Vineta</h6>
+              <small class="text-muted"><i class="fa fa-search-plus me-1"></i>Click para ampliar</small>
+            </div>
+            <div class="card-body text-center p-2">
+              <img [src]="paquete.imagen_vineta_url"
+                   alt="Vineta"
+                   class="img-fluid rounded shadow-sm img-clickable"
+                   style="max-height: 300px; cursor: pointer;"
+                   (click)="abrirImagenModal()"
+                   title="Click para ver en grande">
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Columna Derecha: Timeline de Estados -->
+      <div class="col-12 col-lg-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <h6 class="mb-0">Historial de Estados</h6>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              @for (historial of paquete.historial_estados; track historial.id_historial; let i = $index) {
+                <div class="timeline-item" [class.active]="i === 0">
+                  <div class="timeline-marker">
+                    <i class="fa" [ngClass]="getIconoEstado(historial.estado)"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <span class="badge mb-1" [ngClass]="EstadoPaqueteColors[historial.estado]">
+                          {{ EstadoPaqueteLabels[historial.estado] }}
+                        </span>
+                        @if (historial.comentario) {
+                          <p class="mb-1">{{ historial.comentario }}</p>
+                        }
+                        @if (historial.usuario) {
+                          <small class="text-muted">
+                            <i class="fa fa-user me-1"></i>{{ historial.usuario.nombre }}
+                          </small>
+                        }
+                      </div>
+                      <small class="text-muted text-end">{{ formatDate(historial.creado_en) }}</small>
+                    </div>
+                  </div>
+                </div>
+              } @empty {
+                <p class="text-muted text-center">Sin historial de estados</p>
+              }
+            </div>
+          </div>
+          <div class="card-footer text-muted">
+            <small>
+              <i class="fa fa-calendar me-1"></i>
+              Creado: {{ formatDateLong(paquete.creado_en) }}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Modal Cambiar Estado -->
+<ng-template #cambiarEstadoModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Cambiar Estado del Paquete</h5>
+    <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="mb-3">
+      <label class="form-label">Estado Actual</label>
+      <div>
+        <span class="badge fs-6" [ngClass]="EstadoPaqueteColors[paquete?.estado_actual ?? EstadoPaquete.RECIBIDO_ORIGEN]">
+          {{ EstadoPaqueteLabels[paquete?.estado_actual ?? EstadoPaquete.RECIBIDO_ORIGEN] }}
+        </span>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Nuevo Estado *</label>
+      <select class="form-select" [(ngModel)]="nuevoEstado">
+        <option [ngValue]="null">Seleccione un estado</option>
+        @for (estado of estadosDisponibles; track estado) {
+          <option [ngValue]="estado">{{ EstadoPaqueteLabels[estado] }}</option>
+        }
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Comentario (opcional)</label>
+      <textarea class="form-control" rows="3" [(ngModel)]="comentarioEstado"
+                placeholder="Ej: Paquete cargado en vehiculo placa P123-456"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="confirmarCambioEstado()"
+            [disabled]="cambiandoEstado || !nuevoEstado">
+      @if (cambiandoEstado) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      Cambiar Estado
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal Imagen -->
+<ng-template #imagenModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Imagen de Vineta</h5>
+    <button type="button" class="btn-close" (click)="cerrarImagenModal()"></button>
+  </div>
+  <div class="modal-body text-center p-2" style="background-color: #f8f9fa;">
+    @if (paquete && paquete.imagen_vineta_url) {
+      <img [src]="paquete.imagen_vineta_url"
+           alt="Vineta"
+           class="img-fluid"
+           style="max-height: 85vh; width: auto;">
+    }
+  </div>
+</ng-template>
