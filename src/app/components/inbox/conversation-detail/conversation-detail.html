@@ -1,0 +1,112 @@
+<div class="container-fluid h-100">
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+  } @else if (conversacion) {
+    <div class="row h-100">
+      <div class="col-12">
+        <div class="card h-100 d-flex flex-column">
+          <!-- Header -->
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+              <button class="btn btn-link text-dark me-3" (click)="volver()">
+                <i class="fa fa-arrow-left"></i>
+              </button>
+              <div>
+                <h5 class="mb-0">{{ conversacion.telefono_cliente }}</h5>
+                <small class="text-muted">
+                  {{ conversacion.punto?.nombre }} ·
+                  <span
+                    class="badge"
+                    [class.bg-primary]="conversacion.estado === 'BOT'"
+                    [class.bg-success]="conversacion.estado === 'HUMAN'"
+                  >
+                    {{ EstadoConversacionLabels[conversacion.estado] }}
+                  </span>
+                </small>
+              </div>
+            </div>
+            <div>
+              @if (conversacion.estado === 'BOT') {
+                <button class="btn btn-outline-success btn-sm" (click)="transferirAHumano()">
+                  <i class="fa fa-user me-1"></i> Tomar conversacion
+                </button>
+              } @else {
+                <button class="btn btn-outline-primary btn-sm" (click)="transferirABot()">
+                  <i class="fa fa-robot me-1"></i> Devolver a bot
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div class="card-body flex-grow-1 overflow-auto p-3" #messagesContainer style="max-height: 60vh;">
+            @if (loadingMensajes) {
+              <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+              </div>
+            }
+
+            @for (mensaje of mensajes; track mensaje.id_mensaje) {
+              <div class="message-wrapper mb-3" [class.message-out]="mensaje.direccion === 'OUT'">
+                <div
+                  class="message-bubble"
+                  [class.bg-primary]="mensaje.direccion === 'OUT' && mensaje.tipo_remitente === 'BOT'"
+                  [class.bg-success]="mensaje.direccion === 'OUT' && mensaje.tipo_remitente === 'AGENT'"
+                  [class.bg-light]="mensaje.direccion === 'IN'"
+                  [class.text-white]="mensaje.direccion === 'OUT'"
+                >
+                  <div class="message-content">{{ mensaje.contenido }}</div>
+                  <div class="message-meta small" [class.text-white-50]="mensaje.direccion === 'OUT'">
+                    <span class="me-2">{{ TipoRemitenteLabels[mensaje.tipo_remitente] }}</span>
+                    <span>{{ formatearHora(mensaje.timestamp) }}</span>
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <div class="text-center text-muted py-5">
+                <i class="fa fa-comments fa-3x mb-3"></i>
+                <p>No hay mensajes aún</p>
+              </div>
+            }
+          </div>
+
+          <!-- Input -->
+          @if (conversacion.estado === 'HUMAN') {
+            <div class="card-footer">
+              <div class="input-group">
+                <textarea
+                  class="form-control"
+                  placeholder="Escribe un mensaje..."
+                  [(ngModel)]="nuevoMensaje"
+                  (keypress)="onKeyPress($event)"
+                  rows="2"
+                  [disabled]="enviando"
+                ></textarea>
+                <button class="btn btn-primary" (click)="enviarMensaje()" [disabled]="enviando || !nuevoMensaje.trim()">
+                  @if (enviando) {
+                    <span class="spinner-border spinner-border-sm"></span>
+                  } @else {
+                    <i class="fa fa-paper-plane"></i>
+                  }
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="card-footer bg-light">
+              <div class="text-center text-muted py-2">
+                <i class="fa fa-robot me-2"></i>
+                El bot está respondiendo automáticamente. Haz clic en "Tomar conversación" para responder manualmente.
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

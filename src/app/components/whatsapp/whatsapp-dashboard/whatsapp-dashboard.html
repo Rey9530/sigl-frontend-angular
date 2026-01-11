@@ -1,0 +1,301 @@
+<div class="card p-4">
+  <!-- Header -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Administracion de WhatsApp</h4>
+        <button class="btn btn-outline-primary btn-sm" (click)="loadInstancias()" [disabled]="loading">
+          <i class="fa fa-refresh me-1" [class.fa-spin]="loading"></i> Actualizar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contadores de estado -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="status-counters">
+        <span class="status-counter connected">
+          <i class="fa fa-circle"></i> {{ countConectados }} conectados
+        </span>
+        <span class="status-counter disconnected">
+          <i class="fa fa-circle"></i> {{ countDesconectados }} desconectados
+        </span>
+        @if (countConectando > 0) {
+          <span class="status-counter connecting">
+            <i class="fa fa-circle"></i> {{ countConectando }} conectando
+          </span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de busqueda y filtros -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="filter-bar">
+        <div class="search-box">
+          <i class="fa fa-search"></i>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar por nombre o codigo..."
+            [(ngModel)]="searchTerm"
+          />
+          @if (searchTerm) {
+            <button class="btn-clear" (click)="searchTerm = ''">
+              <i class="fa fa-times"></i>
+            </button>
+          }
+        </div>
+
+        <div class="filter-chips">
+          <button
+            class="chip"
+            [class.active]="statusFilter === 'ALL'"
+            (click)="statusFilter = 'ALL'"
+          >
+            Todos ({{ instancias.length }})
+          </button>
+          <button
+            class="chip connected"
+            [class.active]="statusFilter === 'CONNECTED'"
+            (click)="statusFilter = 'CONNECTED'"
+          >
+            Conectados ({{ countConectados }})
+          </button>
+          <button
+            class="chip disconnected"
+            [class.active]="statusFilter === 'DISCONNECTED'"
+            (click)="statusFilter = 'DISCONNECTED'"
+          >
+            Desconectados ({{ countDesconectados }})
+          </button>
+          @if (countConectando > 0) {
+            <button
+              class="chip connecting"
+              [class.active]="statusFilter === 'CONNECTING'"
+              (click)="statusFilter = 'CONNECTING'"
+            >
+              Conectando ({{ countConectando }})
+            </button>
+          }
+        </div>
+
+        <div class="view-toggle">
+          <button
+            class="btn btn-sm"
+            [class.btn-primary]="viewMode === 'table'"
+            [class.btn-outline-secondary]="viewMode !== 'table'"
+            (click)="viewMode = 'table'"
+            title="Vista tabla"
+          >
+            <i class="fa fa-list"></i>
+          </button>
+          <button
+            class="btn btn-sm"
+            [class.btn-primary]="viewMode === 'cards'"
+            [class.btn-outline-secondary]="viewMode !== 'cards'"
+            (click)="viewMode = 'cards'"
+            title="Vista tarjetas"
+          >
+            <i class="fa fa-th-large"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+  } @else {
+    <!-- Vista Tabla -->
+    @if (viewMode === 'table') {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Sucursal</th>
+              <th>Codigo</th>
+              <th>Estado</th>
+              <th>Numero WhatsApp</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (instancia of instanciasFiltradas; track instancia.punto_id) {
+              <tr>
+                <td>
+                  <strong>{{ instancia.nombre_punto }}</strong>
+                </td>
+                <td>
+                  <code>{{ instancia.codigo_punto }}</code>
+                </td>
+                <td>
+                  <span class="badge bg-{{ getStatusClass(instancia.status) }}">
+                    {{ EstadoWhatsappLabels[instancia.status] }}
+                  </span>
+                </td>
+                <td>
+                  @if (instancia.whatsapp_numero) {
+                    <span class="text-success">
+                      <i class="fa fa-whatsapp me-1"></i>
+                      +{{ instancia.whatsapp_numero }}
+                    </span>
+                  } @else {
+                    <span class="text-muted">-</span>
+                  }
+                </td>
+                <td class="text-end">
+                  @switch (instancia.status) {
+                    @case ('DISCONNECTED') {
+                      <button class="btn btn-success btn-sm" (click)="conectar(instancia)">
+                        <i class="fa fa-plug me-1"></i> Conectar
+                      </button>
+                    }
+                    @case ('CONNECTING') {
+                      <button class="btn btn-warning btn-sm" (click)="solicitarQr(instancia)">
+                        <i class="fa fa-qrcode me-1"></i> Ver QR
+                      </button>
+                    }
+                    @case ('CONNECTED') {
+                      <button class="btn btn-outline-danger btn-sm" (click)="desconectar(instancia)">
+                        <i class="fa fa-power-off me-1"></i> Desconectar
+                      </button>
+                    }
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                  @if (searchTerm || statusFilter !== 'ALL') {
+                    <i class="fa fa-search me-2"></i>
+                    No se encontraron sucursales con los filtros aplicados
+                  } @else {
+                    <i class="fa fa-info-circle me-2"></i>
+                    No hay puntos de servicio configurados
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Vista Tarjetas -->
+    @if (viewMode === 'cards') {
+      <div class="row">
+        @for (instancia of instanciasFiltradas; track instancia.punto_id) {
+          <div class="col-md-4 col-lg-3 mb-4">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 text-truncate" title="{{ instancia.nombre_punto }}">
+                  {{ instancia.nombre_punto }}
+                </h6>
+                <span class="badge bg-{{ getStatusClass(instancia.status) }}">
+                  {{ EstadoWhatsappLabels[instancia.status] }}
+                </span>
+              </div>
+              <div class="card-body py-2">
+                <div class="mb-2">
+                  <small class="text-muted">Codigo:</small>
+                  <code>{{ instancia.codigo_punto }}</code>
+                </div>
+
+                @if (instancia.whatsapp_numero) {
+                  <div>
+                    <small class="text-muted">Numero:</small>
+                    <div class="text-success small">
+                      <i class="fa fa-whatsapp me-1"></i>
+                      +{{ instancia.whatsapp_numero }}
+                    </div>
+                  </div>
+                }
+              </div>
+              <div class="card-footer py-2">
+                @switch (instancia.status) {
+                  @case ('DISCONNECTED') {
+                    <button class="btn btn-success btn-sm w-100" (click)="conectar(instancia)">
+                      <i class="fa fa-plug me-1"></i> Conectar
+                    </button>
+                  }
+                  @case ('CONNECTING') {
+                    <button class="btn btn-warning btn-sm w-100" (click)="solicitarQr(instancia)">
+                      <i class="fa fa-qrcode me-1"></i> Ver QR
+                    </button>
+                  }
+                  @case ('CONNECTED') {
+                    <button class="btn btn-outline-danger btn-sm w-100" (click)="desconectar(instancia)">
+                      <i class="fa fa-power-off me-1"></i> Desconectar
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <div class="col-12">
+            <div class="alert alert-info text-center">
+              @if (searchTerm || statusFilter !== 'ALL') {
+                <i class="fa fa-search me-2"></i>
+                No se encontraron sucursales con los filtros aplicados
+              } @else {
+                <i class="fa fa-info-circle me-2"></i>
+                No hay puntos de servicio configurados. Crea un punto primero.
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Contador de resultados -->
+    @if (instanciasFiltradas.length > 0 && (searchTerm || statusFilter !== 'ALL')) {
+      <div class="text-muted small text-center mt-2">
+        Mostrando {{ instanciasFiltradas.length }} de {{ instancias.length }} sucursales
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal QR -->
+<ng-template #qrModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Conectar WhatsApp - {{ currentPunto?.nombre_punto }}</h5>
+    <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  </div>
+  <div class="modal-body text-center">
+    @if (conectando) {
+      <div class="py-5">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <p class="text-muted">Generando codigo QR...</p>
+      </div>
+    } @else if (qrCode) {
+      <div class="mb-3">
+        <p class="text-muted">Escanea este codigo QR con WhatsApp</p>
+        <img [src]="qrCode" alt="QR Code" class="img-fluid" style="max-width: 300px;" />
+      </div>
+      <div class="alert alert-info small">
+        <i class="fa fa-info-circle me-2"></i>
+        Abre WhatsApp en tu telefono, ve a <strong>Dispositivos vinculados</strong> y escanea el codigo.
+      </div>
+    } @else {
+      <div class="py-5 text-muted">
+        <i class="fa fa-hourglass-half fa-3x mb-3"></i>
+        <p>Esperando codigo QR...</p>
+      </div>
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="solicitarQr(currentPunto!)" [disabled]="conectando">
+      <i class="fa fa-refresh me-1"></i> Regenerar QR
+    </button>
+  </div>
+</ng-template>

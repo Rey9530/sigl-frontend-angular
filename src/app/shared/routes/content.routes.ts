@@ -72,4 +72,45 @@ export const content: Routes = [
     loadComponent: () =>
       import("../../components/paquetes/paquete-detalle/paquete-detalle").then((m) => m.PaqueteDetalle),
   },
+  // WhatsApp Chatbot
+  {
+    path: "whatsapp",
+    data: {
+      title: "WhatsApp",
+      breadcrumb: "WhatsApp",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/whatsapp/whatsapp-dashboard/whatsapp-dashboard").then((m) => m.WhatsappDashboard),
+  },
+  {
+    path: "inbox",
+    data: {
+      title: "Bandeja de Mensajes",
+      breadcrumb: "Inbox",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR, Rol.EMPLEADO_PUNTO])],
+    loadComponent: () =>
+      import("../../components/inbox/inbox-list/inbox-list").then((m) => m.InboxList),
+  },
+  {
+    path: "inbox/:id",
+    data: {
+      title: "Conversacion",
+      breadcrumb: "Detalle",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR, Rol.EMPLEADO_PUNTO])],
+    loadComponent: () =>
+      import("../../components/inbox/conversation-detail/conversation-detail").then((m) => m.ConversationDetail),
+  },
+  {
+    path: "faqs",
+    data: {
+      title: "Preguntas Frecuentes",
+      breadcrumb: "FAQs",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/faqs/faqs-list/faqs-list").then((m) => m.FaqsList),
+  },
 ];

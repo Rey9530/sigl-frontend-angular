@@ -42,6 +42,34 @@ export const menuItems: IMenu[] = [
   //   main_title: "Sistema",
   // },
   {
+    title: 'WhatsApp',
+    id: 'whatsapp',
+    icon: 'chat',
+    type: 'sub',
+    active: false,
+    level: 1,
+    children: [
+      {
+        title: 'Bandeja de Mensajes',
+        path: '/inbox',
+        type: 'link',
+        id: 'inbox',
+      },
+      {
+        title: 'Conexiones',
+        path: '/whatsapp',
+        type: 'link',
+        id: 'whatsapp-dashboard',
+      },
+      {
+        title: 'FAQs',
+        path: '/faqs',
+        type: 'link',
+        id: 'faqs',
+      },
+    ],
+  },
+  {
     title: 'Administracion',
     id: 'administracion',
     icon: 'widget',

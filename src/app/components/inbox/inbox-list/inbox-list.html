@@ -1,0 +1,300 @@
+<div class="container-fluid inbox-split-layout">
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+      <div class="card bg-primary text-white h-100">
+        <div class="card-body py-3">
+          <h6 class="card-title mb-1">Total Conversaciones</h6>
+          <h3 class="mb-0">{{ stats.total }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+      <div class="card bg-info text-white h-100">
+        <div class="card-body py-3">
+          <h6 class="card-title mb-1">En Bot</h6>
+          <h3 class="mb-0">{{ stats.en_bot }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card bg-success text-white h-100">
+        <div class="card-body py-3">
+          <h6 class="card-title mb-1">En Humano</h6>
+          <h3 class="mb-0">{{ stats.en_humano }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card bg-warning text-dark h-100">
+        <div class="card-body py-3">
+          <h6 class="card-title mb-1">Nuevas Hoy</h6>
+          <h3 class="mb-0">{{ stats.nuevas_hoy }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Split Layout Principal -->
+  <div class="row g-0 main-content">
+    <!-- Panel Izquierdo: Lista de Conversaciones -->
+    <div
+      class="col-xxl-4 col-xl-5 col-md-5 col-12"
+      [class.d-none]="isMobile && selectedConversacion"
+      [class.d-md-block]="true"
+    >
+      <div class="card left-panel h-100">
+        <!-- Header con filtros -->
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Conversaciones</h5>
+            <button class="btn btn-sm btn-outline-secondary" (click)="toggleFiltros()">
+              <i class="fa" [class.fa-filter]="!showFiltros" [class.fa-times]="showFiltros"></i>
+            </button>
+          </div>
+
+          <!-- Filtros colapsables -->
+          @if (showFiltros) {
+            <div class="filtros-wrapper mt-3">
+              <div class="row g-2">
+                <div class="col-12">
+                  <select class="form-select form-select-sm" [(ngModel)]="filtroPunto" (ngModelChange)="onFiltroChange()">
+                    <option [ngValue]="null">Todos los puntos</option>
+                    @for (punto of puntos; track punto.id_punto) {
+                      <option [ngValue]="punto.id_punto">{{ punto.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="col-6">
+                  <select class="form-select form-select-sm" [(ngModel)]="filtroEstado" (ngModelChange)="onFiltroChange()">
+                    <option [ngValue]="null">Todos</option>
+                    <option value="BOT">Bot</option>
+                    <option value="HUMAN">Humano</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <input
+                    type="text"
+                    class="form-control form-control-sm"
+                    placeholder="Telefono..."
+                    [(ngModel)]="filtroTelefono"
+                    (input)="onFiltroChange()"
+                  />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Lista scrolleable -->
+        <div class="card-body p-0 conversations-list">
+          <!-- Loading -->
+          @if (loading) {
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          }
+
+          @if (!loading) {
+            <!-- Lista de conversaciones -->
+            @for (conv of conversaciones; track conv.id_conversacion) {
+              <div
+                class="conversation-item"
+                [class.active]="selectedConversacion?.id_conversacion === conv.id_conversacion"
+                (click)="seleccionarConversacion(conv)"
+              >
+                <!-- Avatar -->
+                <div class="conversation-avatar">
+                  <span class="avatar-initials">{{ getInitials(conv.telefono_cliente) }}</span>
+                  <span
+                    class="status-dot"
+                    [class.bg-success]="conv.estado === 'HUMAN'"
+                    [class.bg-primary]="conv.estado === 'BOT'"
+                  ></span>
+                </div>
+
+                <!-- Info -->
+                <div class="conversation-info flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <strong>{{ formatearTelefono(conv.telefono_cliente) }}</strong>
+                    <small class="text-muted ms-2">{{ formatearFecha(conv.ultimo_mensaje_en) }}</small>
+                  </div>
+                  <p class="text-truncate text-muted mb-0">
+                    @if (conv.ultimo_mensaje?.direccion === 'OUT') {
+                      <i class="fa fa-reply me-1 small"></i>
+                    }
+                    {{ conv.ultimo_mensaje?.contenido || 'Sin mensajes' }}
+                  </p>
+                  <small class="text-muted">{{ conv.punto?.nombre }}</small>
+                </div>
+
+                <!-- Badge -->
+                <span
+                  class="badge ms-2"
+                  [class.bg-primary]="conv.estado === 'BOT'"
+                  [class.bg-success]="conv.estado === 'HUMAN'"
+                >
+                  {{ EstadoConversacionLabels[conv.estado] }}
+                </span>
+              </div>
+            } @empty {
+              <div class="text-center py-5 text-muted">
+                <i class="fa fa-inbox fa-3x mb-3"></i>
+                <p>No hay conversaciones</p>
+              </div>
+            }
+
+            <!-- Paginacion -->
+            @if (totalPaginas > 1) {
+              <div class="pagination-wrapper p-3 border-top">
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">
+                    {{ (pagina - 1) * limite + 1 }}-{{ Math.min(pagina * limite, total) }} de {{ total }}
+                  </small>
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" (click)="cambiarPagina(pagina - 1)" [disabled]="pagina === 1">
+                      <i class="fa fa-chevron-left"></i>
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      (click)="cambiarPagina(pagina + 1)"
+                      [disabled]="pagina === totalPaginas"
+                    >
+                      <i class="fa fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Derecho: Detalle de Conversacion -->
+    <div
+      class="col-xxl-8 col-xl-7 col-md-7 col-12"
+      [class.d-none]="isMobile && !selectedConversacion"
+      [class.d-md-block]="true"
+    >
+      <div class="card right-panel h-100">
+        @if (selectedConversacion) {
+          <!-- Header del chat -->
+          <div class="chat-header d-flex justify-content-between align-items-center p-3">
+            <div class="d-flex align-items-center">
+              <!-- Boton volver (solo mobile) -->
+              <button class="btn btn-link d-md-none p-0 me-2" (click)="cerrarDetalle()">
+                <i class="fa fa-arrow-left"></i>
+              </button>
+
+              <div class="avatar-circle me-3">
+                {{ getInitials(selectedConversacion.telefono_cliente) }}
+              </div>
+              <div>
+                <h6 class="mb-0">{{ formatearTelefono(selectedConversacion.telefono_cliente) }}</h6>
+                <small class="text-muted">
+                  {{ selectedConversacion.punto?.nombre }}
+                  <span
+                    class="badge ms-1"
+                    [class.bg-primary]="selectedConversacion.estado === 'BOT'"
+                    [class.bg-success]="selectedConversacion.estado === 'HUMAN'"
+                  >
+                    {{ EstadoConversacionLabels[selectedConversacion.estado] }}
+                  </span>
+                </small>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div>
+              @if (selectedConversacion.estado === 'BOT') {
+                <button class="btn btn-outline-success btn-sm" (click)="transferirAHumano()">
+                  <i class="fa fa-user me-1"></i> Tomar
+                </button>
+              } @else {
+                <button class="btn btn-outline-primary btn-sm" (click)="transferirABot()">
+                  <i class="fa fa-robot me-1"></i> Devolver
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Area de mensajes -->
+          <div class="chat-messages p-3" #messagesContainer>
+            @if (loadingMensajes) {
+              <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-primary"></div>
+              </div>
+            }
+
+            @for (mensaje of mensajes; track mensaje.id_mensaje) {
+              <div class="message-wrapper mb-3" [class.message-out]="mensaje.direccion === 'OUT'">
+                <div
+                  class="message-bubble"
+                  [class.bubble-bot]="mensaje.direccion === 'OUT' && mensaje.tipo_remitente === 'BOT'"
+                  [class.bubble-agent]="mensaje.direccion === 'OUT' && mensaje.tipo_remitente === 'AGENT'"
+                  [class.bubble-customer]="mensaje.direccion === 'IN'"
+                >
+                  <div class="message-content">{{ mensaje.contenido }}</div>
+                  <div class="message-meta">
+                    <span class="me-2">{{ TipoRemitenteLabels[mensaje.tipo_remitente] }}</span>
+                    <span>{{ formatearHora(mensaje.timestamp) }}</span>
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              @if (!loadingMensajes) {
+                <div class="text-center text-muted py-5">
+                  <i class="fa fa-comments fa-3x mb-3"></i>
+                  <p>No hay mensajes</p>
+                </div>
+              }
+            }
+          </div>
+
+          <!-- Input de mensaje -->
+          @if (selectedConversacion.estado === 'HUMAN') {
+            <div class="chat-input p-3 border-top">
+              <div class="input-group">
+                <textarea
+                  class="form-control"
+                  placeholder="Escribe un mensaje..."
+                  [(ngModel)]="nuevoMensaje"
+                  (keypress)="onKeyPress($event)"
+                  rows="2"
+                  [disabled]="enviando"
+                ></textarea>
+                <button
+                  class="btn btn-primary"
+                  (click)="enviarMensaje()"
+                  [disabled]="enviando || !nuevoMensaje.trim()"
+                >
+                  @if (enviando) {
+                    <span class="spinner-border spinner-border-sm"></span>
+                  } @else {
+                    <i class="fa fa-paper-plane"></i>
+                  }
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="chat-input p-3 border-top bg-light">
+              <div class="text-center text-muted">
+                <i class="fa fa-robot me-2"></i>
+                El bot esta respondiendo. Haz clic en "Tomar" para responder manualmente.
+              </div>
+            </div>
+          }
+        } @else {
+          <!-- Estado vacio -->
+          <div class="empty-state">
+            <i class="fa fa-comments fa-4x text-muted"></i>
+            <p class="mt-3 text-muted">Selecciona una conversacion</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

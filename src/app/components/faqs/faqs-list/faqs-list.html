@@ -1,0 +1,203 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Preguntas Frecuentes (FAQs)</h5>
+          <button class="btn btn-primary" (click)="nuevaFaq()">
+            <i class="fa fa-plus me-1"></i> Nueva FAQ
+          </button>
+        </div>
+
+        <div class="card-body">
+          <!-- Filtros -->
+          <div class="row mb-4">
+            <div class="col-md-3">
+              <label class="form-label">Punto de Servicio</label>
+              <select
+                class="form-select"
+                [(ngModel)]="filtroPunto"
+                (ngModelChange)="onFiltroChange()"
+              >
+                <option [ngValue]="null">Todos</option>
+                @for (punto of puntos; track punto.id_punto) {
+                  <option [ngValue]="punto.id_punto">{{ punto.nombre }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Buscar</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Buscar en pregunta, respuesta..."
+                [(ngModel)]="filtroBusqueda"
+                (input)="onFiltroChange()"
+              />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Estado</label>
+              <select
+                class="form-select"
+                [(ngModel)]="filtroActivo"
+                (ngModelChange)="onFiltroChange()"
+              >
+                <option [ngValue]="null">Todos</option>
+                <option [ngValue]="true">Activos</option>
+                <option [ngValue]="false">Inactivos</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          @if (loading) {
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          }
+
+          <!-- Tabla -->
+          @if (!loading) {
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Punto</th>
+                    <th>Pregunta</th>
+                    <th>Respuesta</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (faq of faqs; track faq.id_faq) {
+                    <tr>
+                      <td>
+                        <span class="badge" [class.bg-secondary]="!faq.punto_id" [class.bg-info]="faq.punto_id">
+                          {{ faq.punto?.nombre || 'Global' }}
+                        </span>
+                      </td>
+                      <td>{{ faq.pregunta }}</td>
+                      <td>
+                        <span class="text-truncate d-inline-block" style="max-width: 300px;">
+                          {{ faq.respuesta }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge" [class.bg-success]="faq.activo" [class.bg-danger]="!faq.activo">
+                          {{ faq.activo ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" (click)="editarFaq(faq)" title="Editar">
+                          <i class="fa fa-edit"></i>
+                        </button>
+                        @if (currentUserRol === Rol.SUPER_ADMIN) {
+                          <button class="btn btn-sm btn-outline-danger" (click)="eliminarFaq(faq)" title="Eliminar">
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="text-center py-4 text-muted">
+                        No hay FAQs registradas
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Paginacion -->
+            @if (totalPaginas > 1) {
+              <nav class="d-flex justify-content-between align-items-center mt-3">
+                <span class="text-muted">
+                  Mostrando {{ (pagina - 1) * limite + 1 }} - {{ Math.min(pagina * limite, total) }} de {{ total }}
+                </span>
+                <ul class="pagination mb-0">
+                  <li class="page-item" [class.disabled]="pagina === 1">
+                    <button class="page-link" (click)="cambiarPagina(pagina - 1)">Anterior</button>
+                  </li>
+                  @for (p of [].constructor(totalPaginas); track $index) {
+                    <li class="page-item" [class.active]="pagina === $index + 1">
+                      <button class="page-link" (click)="cambiarPagina($index + 1)">{{ $index + 1 }}</button>
+                    </li>
+                  }
+                  <li class="page-item" [class.disabled]="pagina === totalPaginas">
+                    <button class="page-link" (click)="cambiarPagina(pagina + 1)">Siguiente</button>
+                  </li>
+                </ul>
+              </nav>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal FAQ -->
+<ng-template #faqModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">{{ isEditMode ? 'Editar FAQ' : 'Nueva FAQ' }}</h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="form">
+      <div class="mb-3">
+        <label class="form-label">Punto de Servicio (opcional)</label>
+        <select class="form-select" formControlName="punto_id">
+          <option [ngValue]="null">Global (aplica a todos)</option>
+          @for (punto of puntos; track punto.id_punto) {
+            <option [ngValue]="punto.id_punto">{{ punto.nombre }}</option>
+          }
+        </select>
+        <small class="text-muted">Si no selecciona un punto, la FAQ sera global.</small>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Pregunta <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" formControlName="pregunta" placeholder="¿Cuál es el horario de atención?" />
+        @if (form.get('pregunta')?.invalid && form.get('pregunta')?.touched) {
+          <div class="text-danger small">La pregunta debe tener al menos 5 caracteres</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Respuesta <span class="text-danger">*</span></label>
+        <textarea class="form-control" formControlName="respuesta" rows="4" placeholder="Nuestro horario es de lunes a viernes..."></textarea>
+        @if (form.get('respuesta')?.invalid && form.get('respuesta')?.touched) {
+          <div class="text-danger small">La respuesta debe tener al menos 10 caracteres</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Palabras clave (opcional)</label>
+        <input type="text" class="form-control" formControlName="palabras_clave" placeholder="horario, atencion, abierto" />
+        <small class="text-muted">Separadas por comas. Ayudan al bot a encontrar esta FAQ.</small>
+      </div>
+
+      @if (isEditMode) {
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="activo" id="activo" />
+            <label class="form-check-label" for="activo">FAQ activa</label>
+          </div>
+        </div>
+      }
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+    <button type="button" class="btn btn-primary" [disabled]="submitting" (click)="guardarFaq()">
+      @if (submitting) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      {{ isEditMode ? 'Guardar cambios' : 'Crear FAQ' }}
+    </button>
+  </div>
+</ng-template>
