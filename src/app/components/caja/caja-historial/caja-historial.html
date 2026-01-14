@@ -1,0 +1,216 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="feather icon-clock me-2"></i>
+            Historial de Cierres de Caja
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Filtros -->
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Fecha Desde</label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="filtroFechaDesde"
+                (change)="cargarHistorial()"
+              />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Fecha Hasta</label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="filtroFechaHasta"
+                (change)="cargarHistorial()"
+              />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-outline-secondary me-2" (click)="limpiarFiltros()">
+                <i class="feather icon-x me-1"></i>
+                Limpiar
+              </button>
+              <button class="btn btn-primary" (click)="cargarHistorial()">
+                <i class="feather icon-search me-1"></i>
+                Buscar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de historial -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <!-- Loader -->
+          <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+
+          <!-- Tabla -->
+          <div class="table-responsive" *ngIf="!loading">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Fecha</th>
+                  <th>Usuario</th>
+                  <th>Punto</th>
+                  <th class="text-end">Total</th>
+                  <th class="text-center">Paquetes</th>
+                  <th>Recibido Por</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let cierre of cierres">
+                  <td>
+                    <small class="text-muted">
+                      {{ cierre.creado_en | date:'dd/MM/yyyy HH:mm' }}
+                    </small>
+                  </td>
+                  <td>
+                    <strong>{{ cierre.usuario?.nombre }}</strong>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark">
+                      {{ cierre.punto?.codigo }}
+                    </span>
+                    {{ cierre.punto?.nombre }}
+                  </td>
+                  <td class="text-end">
+                    <span class="fw-bold text-success">
+                      $ {{ cierre.total_recaudado | number:'1.2-2' }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-primary">{{ cierre.cantidad_paquetes }}</span>
+                  </td>
+                  <td>
+                    <span *ngIf="cierre.recibido_por">
+                      {{ cierre.recibido_por.nombre }}
+                    </span>
+                    <span *ngIf="!cierre.recibido_por" class="text-muted">-</span>
+                  </td>
+                  <td class="text-center">
+                    <button
+                      class="btn btn-sm btn-outline-info"
+                      (click)="verDetalle(cierre)"
+                      title="Ver detalle"
+                    >
+                      <i class="feather icon-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Sin datos -->
+            <div *ngIf="cierres.length === 0" class="text-center py-5 text-muted">
+              <i class="feather icon-inbox fs-1 d-block mb-3"></i>
+              <h5>No hay cierres registrados</h5>
+              <p>Intente con otros filtros de busqueda</p>
+            </div>
+          </div>
+
+          <!-- Paginacion -->
+          <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="cierres.length > 0">
+            <small class="text-muted">
+              Mostrando {{ (pagina - 1) * limite + 1 }} - {{ Math.min(pagina * limite, total) }} de {{ total }}
+            </small>
+            <ngb-pagination
+              [collectionSize]="total"
+              [(page)]="pagina"
+              [pageSize]="limite"
+              [maxSize]="5"
+              [rotate]="true"
+              (pageChange)="cambiarPagina($event)"
+            ></ngb-pagination>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalle -->
+<ng-template #detalleModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i class="feather icon-file-text me-2"></i>
+      Detalle de Cierre
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <!-- Loader -->
+    <div *ngIf="loadingDetalle" class="text-center py-4">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+
+    <!-- Contenido -->
+    <div *ngIf="!loadingDetalle && cierreDetalle">
+      <!-- Info general -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <p class="mb-1"><strong>Usuario:</strong> {{ cierreDetalle.usuario?.nombre }}</p>
+          <p class="mb-1"><strong>Punto:</strong> {{ cierreDetalle.punto?.nombre }}</p>
+          <p class="mb-1"><strong>Fecha:</strong> {{ cierreDetalle.creado_en | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <div class="col-md-6">
+          <p class="mb-1"><strong>Recibido por:</strong> {{ cierreDetalle.recibido_por?.nombre || '-' }}</p>
+          <p class="mb-1"><strong>Total:</strong>
+            <span class="fs-5 text-success fw-bold">
+              $ {{ cierreDetalle.total_recaudado | number:'1.2-2' }}
+            </span>
+          </p>
+          <p class="mb-1"><strong>Paquetes:</strong> {{ cierreDetalle.cantidad_paquetes }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="cierreDetalle.notas" class="alert alert-info mb-4">
+        <strong>Notas:</strong> {{ cierreDetalle.notas }}
+      </div>
+
+      <!-- Lista de registros -->
+      <h6>Paquetes Incluidos</h6>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead class="table-light">
+            <tr>
+              <th>Codigo</th>
+              <th>Destinatario</th>
+              <th class="text-end">Producto</th>
+              <th class="text-end">Envio</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let reg of cierreDetalle.registros">
+              <td>
+                <code>{{ reg.paquete?.codigo_rastreo }}</code>
+              </td>
+              <td>{{ reg.paquete?.destinatario_nombre }}</td>
+              <td class="text-end">$ {{ reg.precio_producto | number:'1.2-2' }}</td>
+              <td class="text-end">$ {{ reg.costo_envio | number:'1.2-2' }}</td>
+              <td class="text-end fw-bold">$ {{ reg.total | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cerrar</button>
+  </div>
+</ng-template>

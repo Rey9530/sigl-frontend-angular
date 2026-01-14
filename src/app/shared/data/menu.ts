@@ -36,6 +36,16 @@ export const menuItems: IMenu[] = [
         path: "/paquetes",
         id: 'chart-widgets',
       },
+      {
+        title: "Monitoreo de Caja", 
+        path: "/caja/monitoreo",
+        id: 'chart-widgets',
+      },
+      {
+        title: "Historial de Caja", 
+        path: "/caja/historial",
+        id: 'chart-widgets',
+      },
     ],
   },
   // {

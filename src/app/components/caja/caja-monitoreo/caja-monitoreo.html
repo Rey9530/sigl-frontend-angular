@@ -1,0 +1,171 @@
+<div class="container-fluid">
+  <!-- Header con totales -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <h4 class="mb-0">
+                <i class="feather icon-dollar-sign me-2"></i>
+                Monitoreo de Caja en Tiempo Real
+              </h4>
+              <small class="text-white-50">Actualizado cada 30 segundos</small>
+            </div>
+            <div class="col-md-3 text-md-end">
+              <div class="h5 mb-0">$ {{ totalGeneral | number:'1.2-2' }}</div>
+              <small class="text-white-50">Total Pendiente</small>
+            </div>
+            <div class="col-md-3 text-md-end">
+              <div class="h5 mb-0">{{ totalPaquetes }}</div>
+              <small class="text-white-50">Paquetes</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Usuarios con Dinero Pendiente</h5>
+          <button class="btn btn-sm btn-outline-primary" (click)="cargarResumen()">
+            <i class="feather icon-refresh-cw"></i>
+            Actualizar
+          </button>
+        </div>
+
+        <div class="card-body">
+          <!-- Loader -->
+          <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+
+          <!-- Tabla -->
+          <div class="table-responsive" *ngIf="!loading">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Usuario</th>
+                  <th>Punto</th>
+                  <th class="text-end">Total Pendiente</th>
+                  <th class="text-center">Paquetes</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of resumenUsuarios">
+                  <td>
+                    <i class="feather icon-user me-2 text-muted"></i>
+                    <strong>{{ item.usuario_nombre }}</strong>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark">
+                      {{ item.punto_codigo }}
+                    </span>
+                    {{ item.punto_nombre }}
+                  </td>
+                  <td class="text-end">
+                    <span class="fs-5 fw-bold text-success">
+                      $ {{ item.total_costo_envio | number:'1.2-2' }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-primary rounded-pill">
+                      {{ item.cantidad_paquetes }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <button
+                      class="btn btn-sm btn-success"
+                      (click)="abrirModalCierre(item)"
+                      [disabled]="item.cantidad_paquetes === 0"
+                    >
+                      <i class="feather icon-check me-1"></i>
+                      Cerrar Caja
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Sin datos -->
+            <div *ngIf="resumenUsuarios.length === 0" class="text-center py-5 text-muted">
+              <i class="feather icon-check-circle fs-1 d-block mb-3 text-success"></i>
+              <h5>No hay usuarios con dinero pendiente</h5>
+              <p>Todos los cierres de caja estan al dia</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Cierre -->
+<ng-template #cierreModal let-modal>
+  <div class="modal-header bg-success text-white">
+    <h5 class="modal-title">
+      <i class="feather icon-check-circle me-2"></i>
+      Cerrar Caja
+    </h5>
+    <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body" *ngIf="usuarioSeleccionado">
+    <div class="alert alert-info mb-4">
+      <div class="row">
+        <div class="col-6">
+          <strong>Usuario:</strong><br>
+          {{ usuarioSeleccionado.usuario_nombre }}
+        </div>
+        <div class="col-6">
+          <strong>Punto:</strong><br>
+          {{ usuarioSeleccionado.punto_nombre }}
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-6">
+          <strong>Total a entregar:</strong><br>
+          <span class="fs-3 text-success fw-bold">
+            $ {{ usuarioSeleccionado.total_pendiente | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="col-6">
+          <strong>Paquetes:</strong><br>
+          <span class="fs-3">{{ usuarioSeleccionado.cantidad_paquetes }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Notas (opcional)</label>
+      <textarea
+        class="form-control"
+        [(ngModel)]="notasCierre"
+        rows="3"
+        placeholder="Agregar observaciones del cierre..."
+      ></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn-success"
+      (click)="realizarCierre()"
+      [disabled]="realizandoCierre"
+    >
+      <span *ngIf="realizandoCierre" class="spinner-border spinner-border-sm me-1"></span>
+      <i *ngIf="!realizandoCierre" class="feather icon-check me-1"></i>
+      Confirmar Cierre
+    </button>
+  </div>
+</ng-template>

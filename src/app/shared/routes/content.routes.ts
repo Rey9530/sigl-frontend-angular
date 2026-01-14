@@ -113,4 +113,25 @@ export const content: Routes = [
     loadComponent: () =>
       import("../../components/faqs/faqs-list/faqs-list").then((m) => m.FaqsList),
   },
+  // Control de Caja
+  {
+    path: "caja/monitoreo",
+    data: {
+      title: "Monitoreo de Caja",
+      breadcrumb: "Monitoreo",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/caja/caja-monitoreo/caja-monitoreo").then((m) => m.CajaMonitoreo),
+  },
+  {
+    path: "caja/historial",
+    data: {
+      title: "Historial de Cierres",
+      breadcrumb: "Historial",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/caja/caja-historial/caja-historial").then((m) => m.CajaHistorial),
+  },
 ];
