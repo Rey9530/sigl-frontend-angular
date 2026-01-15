@@ -113,6 +113,27 @@ export const content: Routes = [
     loadComponent: () =>
       import("../../components/faqs/faqs-list/faqs-list").then((m) => m.FaqsList),
   },
+  // Gestión de Clientes
+  {
+    path: "clientes",
+    data: {
+      title: "Gestión de Clientes",
+      breadcrumb: "Clientes",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/clientes/clientes-list/clientes-list").then((m) => m.ClientesList),
+  },
+  {
+    path: "clientes/:id",
+    data: {
+      title: "Detalle Cliente",
+      breadcrumb: "Detalle",
+    },
+    canActivate: [roleGuard([Rol.SUPER_ADMIN, Rol.ADMINISTRADOR])],
+    loadComponent: () =>
+      import("../../components/clientes/cliente-detalle/cliente-detalle").then((m) => m.ClienteDetalle),
+  },
   // Control de Caja
   {
     path: "caja/monitoreo",

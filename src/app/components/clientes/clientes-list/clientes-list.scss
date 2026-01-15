@@ -1,0 +1,30 @@
+.card {
+  .card-header {
+    background-color: #f8f9fa;
+  }
+}
+
+.table {
+  th {
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+}
+
+.btn-group-sm {
+  .btn {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.badge {
+  font-weight: 500;
+}
+
+code {
+  user-select: all;
+}

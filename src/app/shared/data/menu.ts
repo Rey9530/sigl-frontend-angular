@@ -99,6 +99,12 @@ export const menuItems: IMenu[] = [
         type: 'link',
         id: 'chart-widgets',
       },
+      {
+        title: 'Clientes',
+        path: '/clientes',
+        type: 'link',
+        id: 'clientes',
+      },
     ],
   },
 ];

@@ -1,0 +1,372 @@
+<div class="container-fluid">
+  <!-- Estadísticas -->
+  @if (estadisticas) {
+    <div class="row mb-4">
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-primary text-white">
+          <div class="card-body">
+            <h6 class="card-title">Total Clientes</h6>
+            <h2 class="mb-0">{{ estadisticas.total }}</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-warning text-dark">
+          <div class="card-body">
+            <h6 class="card-title">Pendientes</h6>
+            <h2 class="mb-0">{{ estadisticas.pendientes }}</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-success text-white">
+          <div class="card-body">
+            <h6 class="card-title">Activos</h6>
+            <h2 class="mb-0">{{ estadisticas.activos }}</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-secondary text-white">
+          <div class="card-body">
+            <h6 class="card-title">Suspendidos</h6>
+            <h2 class="mb-0">{{ estadisticas.suspendidos }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Card principal -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h5 class="mb-0">Gestión de Clientes</h5>
+      <span class="badge bg-info" *ngIf="meta">{{ meta.total }} registros</span>
+    </div>
+
+    <div class="card-body">
+      <!-- Filtros -->
+      <div class="row mb-4 g-3">
+        <div class="col-md-4">
+          <label class="form-label">Buscar</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Nombre, email o teléfono..."
+            [(ngModel)]="filtroBusqueda"
+            (input)="onFiltroChange()"
+          />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Estado</label>
+          <select class="form-select" [(ngModel)]="filtroEstado" (change)="onFiltroChange()">
+            <option value="">Todos</option>
+            @for (estado of estados; track estado) {
+              <option [value]="estado">{{ EstadoClienteLabels[estado] }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Desde</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="filtroFechaDesde"
+            (change)="onFiltroChange()"
+          />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Hasta</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="filtroFechaHasta"
+            (change)="onFiltroChange()"
+          />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltros()">
+            <i class="fa fa-times me-1"></i> Limpiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      @if (loading) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-2 text-muted">Cargando clientes...</p>
+        </div>
+      } @else {
+        <!-- Tabla -->
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th>Paquetes</th>
+                <th>Registro</th>
+                <th>Último Acceso</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cliente of clientes; track cliente.id_cliente) {
+                <tr>
+                  <td>{{ cliente.id_cliente }}</td>
+                  <td>
+                    <a href="javascript:void(0)" (click)="verDetalle(cliente)" class="text-decoration-none">
+                      {{ cliente.nombre }}
+                    </a>
+                  </td>
+                  <td>{{ cliente.email }}</td>
+                  <td>{{ cliente.telefono }}</td>
+                  <td>
+                    <span class="badge {{ EstadoClienteColors[cliente.estado] }}">
+                      {{ EstadoClienteLabels[cliente.estado] }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark">{{ cliente.cantidad_paquetes }}</span>
+                  </td>
+                  <td>{{ formatFecha(cliente.creado_en) }}</td>
+                  <td>{{ formatFecha(cliente.ultimo_acceso) }}</td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <!-- Ver detalle -->
+                      <button
+                        class="btn btn-outline-primary"
+                        (click)="verDetalle(cliente)"
+                        title="Ver detalle"
+                      >
+                        <i class="fa fa-eye"></i>
+                      </button>
+
+                      <!-- Aprobar (solo pendientes) -->
+                      @if (cliente.estado === EstadoCliente.PENDIENTE_VERIFICACION) {
+                        <button
+                          class="btn btn-outline-success"
+                          (click)="aprobarCliente(cliente)"
+                          title="Aprobar"
+                        >
+                          <i class="fa fa-check"></i>
+                        </button>
+                        <button
+                          class="btn btn-outline-danger"
+                          (click)="abrirRechazarModal(cliente)"
+                          title="Rechazar"
+                        >
+                          <i class="fa fa-times"></i>
+                        </button>
+                      }
+
+                      <!-- Suspender (solo activos) -->
+                      @if (cliente.estado === EstadoCliente.ACTIVO) {
+                        <button
+                          class="btn btn-outline-warning"
+                          (click)="suspenderCliente(cliente)"
+                          title="Suspender"
+                        >
+                          <i class="fa fa-ban"></i>
+                        </button>
+                      }
+
+                      <!-- Activar (suspendidos y rechazados) -->
+                      @if (cliente.estado === EstadoCliente.SUSPENDIDO || cliente.estado === EstadoCliente.RECHAZADO) {
+                        <button
+                          class="btn btn-outline-success"
+                          (click)="activarCliente(cliente)"
+                          title="Activar"
+                        >
+                          <i class="fa fa-check-circle"></i>
+                        </button>
+                      }
+
+                      <!-- Editar -->
+                      <button
+                        class="btn btn-outline-secondary"
+                        (click)="abrirEditModal(cliente)"
+                        title="Editar"
+                      >
+                        <i class="fa fa-edit"></i>
+                      </button>
+
+                      <!-- Reset Password -->
+                      <button
+                        class="btn btn-outline-info"
+                        (click)="resetPassword(cliente)"
+                        title="Resetear contraseña"
+                      >
+                        <i class="fa fa-key"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="9" class="text-center py-4 text-muted">
+                    No se encontraron clientes con los filtros aplicados
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        @if (meta && meta.total_paginas > 1) {
+          <nav class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted">
+              Mostrando {{ (meta.pagina - 1) * meta.limite + 1 }} -
+              {{ Math.min(meta.pagina * meta.limite, meta.total) }} de {{ meta.total }}
+            </small>
+            <ul class="pagination mb-0">
+              <li class="page-item" [class.disabled]="meta.pagina === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="cambiarPagina(meta.pagina - 1)">
+                  Anterior
+                </a>
+              </li>
+              @for (p of getPaginas(); track p) {
+                <li class="page-item" [class.active]="p === meta.pagina">
+                  <a class="page-link" href="javascript:void(0)" (click)="cambiarPagina(p)">{{ p }}</a>
+                </li>
+              }
+              <li class="page-item" [class.disabled]="meta.pagina === meta.total_paginas">
+                <a class="page-link" href="javascript:void(0)" (click)="cambiarPagina(meta.pagina + 1)">
+                  Siguiente
+                </a>
+              </li>
+            </ul>
+          </nav>
+        }
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<ng-template #editModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Editar Cliente</h5>
+    <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="editForm">
+      <div class="mb-3">
+        <label class="form-label">Nombre *</label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="nombre"
+          [ngClass]="{ 'is-invalid': editForm.get('nombre')?.touched && editForm.get('nombre')?.invalid }"
+        />
+        @if (editForm.get('nombre')?.touched && editForm.get('nombre')?.errors?.['required']) {
+          <div class="invalid-feedback">El nombre es requerido</div>
+        }
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email *</label>
+        <input
+          type="email"
+          class="form-control"
+          formControlName="email"
+          [ngClass]="{ 'is-invalid': editForm.get('email')?.touched && editForm.get('email')?.invalid }"
+        />
+        @if (editForm.get('email')?.touched && editForm.get('email')?.errors?.['required']) {
+          <div class="invalid-feedback">El email es requerido</div>
+        }
+        @if (editForm.get('email')?.touched && editForm.get('email')?.errors?.['email']) {
+          <div class="invalid-feedback">Email inválido</div>
+        }
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Teléfono *</label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="telefono"
+          [ngClass]="{ 'is-invalid': editForm.get('telefono')?.touched && editForm.get('telefono')?.invalid }"
+        />
+        @if (editForm.get('telefono')?.touched && editForm.get('telefono')?.errors?.['required']) {
+          <div class="invalid-feedback">El teléfono es requerido</div>
+        }
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="guardarEdicion()" [disabled]="submitting">
+      @if (submitting) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      Guardar
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal Rechazar -->
+<ng-template #rechazarModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Rechazar Cliente</h5>
+    <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  </div>
+  <div class="modal-body">
+    <p>¿Está seguro de rechazar a <strong>{{ rechazandoCliente?.nombre }}</strong>?</p>
+    <form [formGroup]="rechazarForm">
+      <div class="mb-3">
+        <label class="form-label">Motivo del rechazo *</label>
+        <textarea
+          class="form-control"
+          rows="3"
+          formControlName="motivo"
+          placeholder="Ingrese el motivo del rechazo (mínimo 10 caracteres)..."
+          [ngClass]="{ 'is-invalid': rechazarForm.get('motivo')?.touched && rechazarForm.get('motivo')?.invalid }"
+        ></textarea>
+        @if (rechazarForm.get('motivo')?.touched && rechazarForm.get('motivo')?.errors?.['required']) {
+          <div class="invalid-feedback">El motivo es requerido</div>
+        }
+        @if (rechazarForm.get('motivo')?.touched && rechazarForm.get('motivo')?.errors?.['minlength']) {
+          <div class="invalid-feedback">El motivo debe tener al menos 10 caracteres</div>
+        }
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+    <button type="button" class="btn btn-danger" (click)="confirmarRechazo()" [disabled]="submitting">
+      @if (submitting) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      Rechazar
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal Password -->
+<ng-template #passwordModal>
+  <div class="modal-header">
+    <h5 class="modal-title">Nueva Contraseña Generada</h5>
+    <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  </div>
+  <div class="modal-body text-center">
+    <div class="alert alert-warning">
+      <i class="fa fa-exclamation-triangle me-2"></i>
+      Esta contraseña solo se mostrará una vez. Asegúrese de copiarla.
+    </div>
+    <div class="bg-light p-3 rounded mb-3">
+      <code class="fs-4">{{ passwordTemporal }}</code>
+    </div>
+    <button class="btn btn-outline-primary" (click)="copiarPassword()">
+      <i class="fa fa-copy me-1"></i> Copiar al portapapeles
+    </button>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cerrar</button>
+  </div>
+</ng-template>

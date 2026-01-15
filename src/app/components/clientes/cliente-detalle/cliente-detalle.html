@@ -1,0 +1,282 @@
+<div class="container-fluid">
+  <!-- Loading principal -->
+  @if (loadingCliente) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2 text-muted">Cargando cliente...</p>
+    </div>
+  } @else if (cliente) {
+    <!-- Header con botón volver -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <button class="btn btn-outline-secondary me-3" (click)="volver()">
+          <i class="fa fa-arrow-left me-1"></i> Volver
+        </button>
+        <h4 class="d-inline-block mb-0">{{ cliente.nombre }}</h4>
+        <span class="badge ms-2 {{ EstadoClienteColors[cliente.estado] }}">
+          {{ EstadoClienteLabels[cliente.estado] }}
+        </span>
+      </div>
+      <div class="btn-group">
+        @if (cliente.estado === EstadoCliente.PENDIENTE_VERIFICACION) {
+          <button class="btn btn-success" (click)="aprobar()">
+            <i class="fa fa-check me-1"></i> Aprobar
+          </button>
+          <button class="btn btn-danger" (click)="rechazar()">
+            <i class="fa fa-times me-1"></i> Rechazar
+          </button>
+        }
+        @if (cliente.estado === EstadoCliente.ACTIVO) {
+          <button class="btn btn-warning" (click)="suspender()">
+            <i class="fa fa-ban me-1"></i> Suspender
+          </button>
+        }
+        @if (cliente.estado === EstadoCliente.SUSPENDIDO || cliente.estado === EstadoCliente.RECHAZADO) {
+          <button class="btn btn-success" (click)="activar()">
+            <i class="fa fa-check-circle me-1"></i> Activar
+          </button>
+        }
+        <button class="btn btn-info" (click)="resetPassword()">
+          <i class="fa fa-key me-1"></i> Resetear Contraseña
+        </button>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Información del cliente -->
+      <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <h6 class="mb-0">Información del Cliente</h6>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless table-sm mb-0">
+              <tr>
+                <th class="text-muted" style="width: 40%;">ID:</th>
+                <td>{{ cliente.id_cliente }}</td>
+              </tr>
+              <tr>
+                <th class="text-muted">Email:</th>
+                <td>{{ cliente.email }}</td>
+              </tr>
+              <tr>
+                <th class="text-muted">Teléfono:</th>
+                <td>{{ cliente.telefono }}</td>
+              </tr>
+              <tr>
+                <th class="text-muted">Estado:</th>
+                <td>
+                  <span class="badge {{ EstadoClienteColors[cliente.estado] }}">
+                    {{ EstadoClienteLabels[cliente.estado] }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <th class="text-muted">Registrado:</th>
+                <td>{{ formatFecha(cliente.creado_en) }}</td>
+              </tr>
+              <tr>
+                <th class="text-muted">Último acceso:</th>
+                <td>{{ formatFecha(cliente.ultimo_acceso) }}</td>
+              </tr>
+              @if (cliente.fecha_aprobacion) {
+                <tr>
+                  <th class="text-muted">Aprobación:</th>
+                  <td>{{ formatFecha(cliente.fecha_aprobacion) }}</td>
+                </tr>
+              }
+              @if (cliente.aprobado_por) {
+                <tr>
+                  <th class="text-muted">Aprobado por:</th>
+                  <td>{{ cliente.aprobado_por.nombre }}</td>
+                </tr>
+              }
+              @if (cliente.motivo_rechazo) {
+                <tr>
+                  <th class="text-muted">Motivo:</th>
+                  <td class="text-danger">{{ cliente.motivo_rechazo }}</td>
+                </tr>
+              }
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <h6 class="mb-0">Estadísticas de Paquetes</h6>
+          </div>
+          <div class="card-body">
+            @if (loadingEstadisticas) {
+              <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-primary"></div>
+              </div>
+            } @else if (estadisticas) {
+              <div class="row text-center mb-3">
+                <div class="col-md-3 col-6 mb-3">
+                  <div class="bg-light rounded p-3">
+                    <h3 class="mb-0">{{ estadisticas.total_paquetes }}</h3>
+                    <small class="text-muted">Total Paquetes</small>
+                  </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                  <div class="bg-light rounded p-3">
+                    <h6 class="mb-0">{{ formatFecha(estadisticas.primer_paquete) }}</h6>
+                    <small class="text-muted">Primer Envío</small>
+                  </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                  <div class="bg-light rounded p-3">
+                    <h6 class="mb-0">{{ formatFecha(estadisticas.ultimo_paquete) }}</h6>
+                    <small class="text-muted">Último Envío</small>
+                  </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                  <div class="bg-light rounded p-3">
+                    <h3 class="mb-0">{{ cliente.cantidad_paquetes }}</h3>
+                    <small class="text-muted">Paquetes Vinculados</small>
+                  </div>
+                </div>
+              </div>
+
+              @if (estadisticas.paquetes_por_estado.length > 0) {
+                <h6 class="text-muted mb-2">Desglose por Estado:</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  @for (item of estadisticas.paquetes_por_estado; track item.estado) {
+                    <span class="badge {{ EstadoPaqueteColors[item.estado] }}">
+                      {{ EstadoPaqueteLabels[item.estado] }}: {{ item.cantidad }}
+                    </span>
+                  }
+                </div>
+              }
+            } @else {
+              <p class="text-muted text-center mb-0">Sin estadísticas disponibles</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial de Paquetes -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Historial de Paquetes</h6>
+        <div class="d-flex gap-2">
+          <select
+            class="form-select form-select-sm"
+            style="width: auto;"
+            [(ngModel)]="filtroPaqueteEstado"
+            (change)="onFiltroPaqueteChange()"
+          >
+            <option value="">Todos los estados</option>
+            @for (estado of estadosPaquete; track estado) {
+              <option [value]="estado">{{ EstadoPaqueteLabels[estado] }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (loadingPaquetes) {
+          <div class="text-center py-3">
+            <div class="spinner-border text-primary"></div>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Código</th>
+                  <th>Destinatario</th>
+                  <th>Origen</th>
+                  <th>Destino</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (paquete of paquetes; track paquete.id_paquete) {
+                  <tr>
+                    <td>
+                      <code>{{ paquete.codigo_rastreo }}</code>
+                    </td>
+                    <td>
+                      {{ paquete.destinatario_nombre }}<br />
+                      <small class="text-muted">{{ paquete.destinatario_telefono }}</small>
+                    </td>
+                    <td>
+                      {{ paquete.punto_origen.nombre }}<br />
+                      <small class="text-muted">{{ paquete.punto_origen.ciudad }}</small>
+                    </td>
+                    <td>
+                      {{ paquete.punto_destino.nombre }}<br />
+                      <small class="text-muted">{{ paquete.punto_destino.ciudad }}</small>
+                    </td>
+                    <td>
+                      <span class="badge {{ EstadoPaqueteColors[paquete.estado_actual] }}">
+                        {{ EstadoPaqueteLabels[paquete.estado_actual] }}
+                      </span>
+                    </td>
+                    <td>{{ formatFecha(paquete.creado_en) }}</td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="verPaquete(paquete)"
+                        title="Ver detalle"
+                      >
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                      No se encontraron paquetes
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación -->
+          @if (paquetesMeta && paquetesMeta.total_paginas > 1) {
+            <nav class="d-flex justify-content-center mt-3">
+              <ul class="pagination mb-0">
+                <li class="page-item" [class.disabled]="paquetesMeta.pagina === 1">
+                  <a
+                    class="page-link"
+                    href="javascript:void(0)"
+                    (click)="cambiarPaginaPaquetes(paquetesMeta.pagina - 1)"
+                  >
+                    Anterior
+                  </a>
+                </li>
+                @for (p of getPaginasPaquetes(); track p) {
+                  <li class="page-item" [class.active]="p === paquetesMeta.pagina">
+                    <a class="page-link" href="javascript:void(0)" (click)="cambiarPaginaPaquetes(p)">
+                      {{ p }}
+                    </a>
+                  </li>
+                }
+                <li class="page-item" [class.disabled]="paquetesMeta.pagina === paquetesMeta.total_paginas">
+                  <a
+                    class="page-link"
+                    href="javascript:void(0)"
+                    (click)="cambiarPaginaPaquetes(paquetesMeta.pagina + 1)"
+                  >
+                    Siguiente
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          }
+        }
+      </div>
+    </div>
+  }
+</div>
