@@ -43,7 +43,10 @@
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5>Recepciones</h5>
-          <div class="d-flex gap-2">
+          <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-primary" (click)="abrirModalEscanear()">
+              <i class="fa fa-camera me-1"></i> Escanear Vineta
+            </button>
             <select class="form-select form-select-sm" style="width: auto;"
                     [(ngModel)]="filtroPuntoServicio" (ngModelChange)="onFiltroPuntoChange()">
               <option [ngValue]="null">Todos los puntos</option>
@@ -200,5 +203,159 @@
            class="img-fluid"
            style="max-height: 80vh; width: auto;">
     }
+  </div>
+</ng-template>
+
+<!-- Modal Escanear Vineta -->
+<ng-template #escanearModal>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i class="fa fa-camera me-2"></i>Escanear Vineta
+    </h5>
+    <button type="button" class="btn-close" (click)="modalRef?.close()" [disabled]="subiendo"></button>
+  </div>
+  <div class="modal-body">
+    <!-- Zona de subida -->
+    <div class="mb-3">
+      <label class="form-label">Imagen de la vineta *</label>
+      <div class="upload-zone border rounded p-4 text-center"
+           [class.border-primary]="archivoSeleccionado && !errorArchivo"
+           [class.border-danger]="errorArchivo"
+           [class.border-dashed]="!archivoSeleccionado">
+        @if (!archivoSeleccionado) {
+          <i class="fa fa-cloud-upload fa-3x text-muted mb-3"></i>
+          <p class="mb-2">Seleccione o arrastre una imagen</p>
+          <p class="text-muted small mb-3">JPG, PNG, WebP o GIF - Max 10MB</p>
+        } @else {
+          <i class="fa fa-file-image-o fa-3x text-primary mb-3"></i>
+          <p class="mb-1 fw-medium">{{ archivoSeleccionado.name }}</p>
+          <p class="text-muted small mb-0">{{ (archivoSeleccionado.size / 1024 / 1024).toFixed(2) }} MB</p>
+        }
+        <input type="file"
+               class="form-control mt-3"
+               accept="image/jpeg,image/png,image/webp,image/gif"
+               (change)="onArchivoSeleccionado($event)"
+               [disabled]="subiendo">
+      </div>
+      @if (errorArchivo) {
+        <div class="text-danger small mt-2">
+          <i class="fa fa-exclamation-circle me-1"></i>{{ errorArchivo }}
+        </div>
+      }
+    </div>
+
+    <!-- Punto de servicio -->
+    <div class="mb-3">
+      <label class="form-label">Punto de servicio *</label>
+      <select class="form-select"
+              [(ngModel)]="puntoServicioIdSubida"
+              [disabled]="subiendo">
+        <option [ngValue]="null">Seleccione un punto de servicio</option>
+        @for (punto of puntosServicio; track punto.id_punto) {
+          <option [ngValue]="punto.id_punto">{{ punto.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Notas -->
+    <div class="mb-3">
+      <label class="form-label">Notas (opcional)</label>
+      <textarea class="form-control"
+                rows="2"
+                [(ngModel)]="notasSubida"
+                [disabled]="subiendo"
+                placeholder="Notas adicionales sobre la recepcion..."></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modalRef?.close()" [disabled]="subiendo">
+      Cancelar
+    </button>
+    <button type="button" class="btn btn-primary"
+            (click)="subirImagen()"
+            [disabled]="!archivoSeleccionado || !puntoServicioIdSubida || subiendo">
+      @if (subiendo) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+        Procesando OCR...
+      } @else {
+        <i class="fa fa-upload me-1"></i> Subir y Procesar
+      }
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal Resultado -->
+<ng-template #resultadoModal>
+  <div class="modal-header bg-success text-white">
+    <h5 class="modal-title">
+      <i class="fa fa-check-circle me-2"></i>Recepcion Creada
+    </h5>
+    <button type="button" class="btn-close btn-close-white" (click)="cerrarResultadoModal()"></button>
+  </div>
+  <div class="modal-body">
+    @if (recepcionCreada) {
+      <!-- Indicador de confianza -->
+      <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center gap-2">
+          <i class="fa fa-2x" [ngClass]="[getConfianzaIcon(recepcionCreada.confianza_global), getConfianzaClass(recepcionCreada.confianza_global)]"></i>
+          <div>
+            <div class="fw-medium">Confianza {{ getConfianzaTexto(recepcionCreada.confianza_global) }}</div>
+            <div class="h4 mb-0" [ngClass]="getConfianzaClass(recepcionCreada.confianza_global)">
+              {{ recepcionCreada.confianza_global }}%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (recepcionCreada.confianza_global < 80) {
+        <div class="alert alert-warning">
+          <i class="fa fa-exclamation-triangle me-2"></i>
+          La confianza del OCR es baja. Se recomienda revisar y corregir los datos manualmente.
+        </div>
+      }
+
+      <!-- Datos extraidos -->
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">Datos extraidos por OCR</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label text-muted small mb-1">Vendedor</label>
+              <div class="fw-medium">{{ recepcionCreada.vendedor || '-' }}</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label text-muted small mb-1">Cliente</label>
+              <div class="fw-medium">{{ recepcionCreada.cliente || '-' }}</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label text-muted small mb-1">Telefono</label>
+              <div class="fw-medium">{{ recepcionCreada.telefono || '-' }}</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label text-muted small mb-1">Destino</label>
+              <div class="fw-medium">{{ recepcionCreada.destino || '-' }}</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label text-muted small mb-1">Dia Entrega</label>
+              <div class="fw-medium">{{ recepcionCreada.dia_entrega || '-' }}</div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label text-muted small mb-1">Encomendista</label>
+              <div class="fw-medium">{{ recepcionCreada.encomendista || '-' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrarResultadoModal()">
+      Cerrar
+    </button>
+    <button type="button" class="btn btn-primary" (click)="verDetalleCreado()">
+      <i class="fa fa-pencil me-1"></i> Ver Detalle y Editar
+    </button>
   </div>
 </ng-template>

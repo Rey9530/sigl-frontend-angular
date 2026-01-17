@@ -28,6 +28,8 @@ import { ConfidenceBadge } from '../../../shared/components/ui/confidence-badge/
 export class RecepcionesList implements OnInit, OnDestroy {
   @ViewChild('descartarModal') descartarModal!: TemplateRef<any>;
   @ViewChild('imagenModal') imagenModal!: TemplateRef<any>;
+  @ViewChild('escanearModal') escanearModal!: TemplateRef<any>;
+  @ViewChild('resultadoModal') resultadoModal!: TemplateRef<any>;
 
   private recepcionesService = inject(RecepcionesService);
   private puntosService = inject(PuntosService);
@@ -51,6 +53,20 @@ export class RecepcionesList implements OnInit, OnDestroy {
 
   // Modal imagen
   imagenSeleccionada: string | null = null;
+
+  // Modal escanear
+  archivoSeleccionado: File | null = null;
+  puntoServicioIdSubida: number | null = null;
+  notasSubida = '';
+  subiendo = false;
+  errorArchivo: string | null = null;
+
+  // Modal resultado
+  recepcionCreada: IRecepcion | null = null;
+
+  // Constantes de validacion
+  readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
   // WebSocket
   private wsSubscriptions: Subscription[] = [];
@@ -265,5 +281,112 @@ export class RecepcionesList implements OnInit, OnDestroy {
     return recepcion.estado === EstadoRecepcion.PENDIENTE_REVISION ||
            recepcion.estado === EstadoRecepcion.REVISION_PARCIAL ||
            recepcion.estado === EstadoRecepcion.VALIDADO;
+  }
+
+  // === Metodos para escanear vineta ===
+
+  abrirModalEscanear(): void {
+    this.archivoSeleccionado = null;
+    this.puntoServicioIdSubida = null;
+    this.notasSubida = '';
+    this.errorArchivo = null;
+    this.subiendo = false;
+    this.modalRef = this.modal.open(this.escanearModal, { centered: true, size: 'lg' });
+  }
+
+  onArchivoSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.errorArchivo = null;
+
+    if (!input.files || input.files.length === 0) {
+      this.archivoSeleccionado = null;
+      return;
+    }
+
+    const file = input.files[0];
+
+    // Validar tipo
+    if (!this.ALLOWED_TYPES.includes(file.type)) {
+      this.errorArchivo = 'Tipo de archivo no permitido. Use JPG, PNG, WebP o GIF.';
+      this.archivoSeleccionado = null;
+      input.value = '';
+      return;
+    }
+
+    // Validar tamano
+    if (file.size > this.MAX_FILE_SIZE) {
+      this.errorArchivo = 'El archivo excede el tamano maximo de 10MB.';
+      this.archivoSeleccionado = null;
+      input.value = '';
+      return;
+    }
+
+    this.archivoSeleccionado = file;
+  }
+
+  subirImagen(): void {
+    if (!this.archivoSeleccionado) {
+      this.toast.warning('Seleccione una imagen');
+      return;
+    }
+
+    if (!this.puntoServicioIdSubida) {
+      this.toast.warning('Seleccione un punto de servicio');
+      return;
+    }
+
+    this.subiendo = true;
+    this.recepcionesService.crear(
+      this.archivoSeleccionado,
+      this.puntoServicioIdSubida,
+      this.notasSubida || undefined
+    ).subscribe({
+      next: (recepcion) => {
+        this.subiendo = false;
+        this.modalRef?.close();
+        this.recepcionCreada = recepcion;
+        this.modalRef = this.modal.open(this.resultadoModal, { centered: true, size: 'lg' });
+        this.loadRecepciones();
+        this.loadEstadisticas();
+      },
+      error: (error) => {
+        this.subiendo = false;
+        const message = error.error?.message || 'Error al procesar la imagen';
+        this.toast.error(message);
+      }
+    });
+  }
+
+  verDetalleCreado(): void {
+    if (this.recepcionCreada) {
+      this.modalRef?.close();
+      this.router.navigate(['/recepciones', this.recepcionCreada.id_recepcion]);
+    }
+  }
+
+  cerrarResultadoModal(): void {
+    this.modalRef?.close();
+    this.recepcionCreada = null;
+  }
+
+  getConfianzaClass(confianza: number | null | undefined): string {
+    if (confianza === null || confianza === undefined) return 'text-secondary';
+    if (confianza >= 80) return 'text-success';
+    if (confianza >= 50) return 'text-warning';
+    return 'text-danger';
+  }
+
+  getConfianzaIcon(confianza: number | null | undefined): string {
+    if (confianza === null || confianza === undefined) return 'fa-question-circle';
+    if (confianza >= 80) return 'fa-check-circle';
+    if (confianza >= 50) return 'fa-exclamation-circle';
+    return 'fa-times-circle';
+  }
+
+  getConfianzaTexto(confianza: number | null | undefined): string {
+    if (confianza === null || confianza === undefined) return 'Sin datos';
+    if (confianza >= 80) return 'Alta';
+    if (confianza >= 50) return 'Media';
+    return 'Baja';
   }
 }
