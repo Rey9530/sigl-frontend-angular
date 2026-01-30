@@ -95,7 +95,7 @@
                                class="img-thumbnail img-clickable"
                                style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
                                (click)="abrirImagenModal(recepcion.imagen_url)"
-                               (error)="$event.target.src = 'assets/images/placeholder.png'"
+                               (error)="onImageError($event)"
                                title="Click para ampliar">
                         } @else {
                           <div class="bg-light d-flex align-items-center justify-content-center"

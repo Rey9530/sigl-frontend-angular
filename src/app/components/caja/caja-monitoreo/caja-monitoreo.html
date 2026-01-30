@@ -5,20 +5,28 @@
       <div class="card bg-primary text-white">
         <div class="card-body">
           <div class="row align-items-center">
-            <div class="col-md-6">
+            <div class="col-md-4">
               <h4 class="mb-0">
                 <i class="feather icon-dollar-sign me-2"></i>
-                Monitoreo de Caja en Tiempo Real
+                Monitoreo de Caja
               </h4>
               <small class="text-white-50">Actualizado cada 30 segundos</small>
             </div>
-            <div class="col-md-3 text-md-end">
+            <div class="col-md-2 text-md-end">
               <div class="h5 mb-0">$ {{ totalGeneral | number:'1.2-2' }}</div>
               <small class="text-white-50">Total Pendiente</small>
             </div>
-            <div class="col-md-3 text-md-end">
-              <div class="h5 mb-0">{{ totalPaquetes }}</div>
-              <small class="text-white-50">Paquetes</small>
+            <div class="col-md-2 text-md-end">
+              <div class="h6 mb-0">$ {{ totalRecepcion | number:'1.2-2' }}</div>
+              <small class="text-white-50">Recepciones</small>
+            </div>
+            <div class="col-md-2 text-md-end">
+              <div class="h6 mb-0">$ {{ totalEntrega | number:'1.2-2' }}</div>
+              <small class="text-white-50">Entregas</small>
+            </div>
+            <div class="col-md-2 text-md-end">
+              <div class="h5 mb-0">{{ totalRegistros }}</div>
+              <small class="text-white-50">Registros</small>
             </div>
           </div>
         </div>
@@ -54,7 +62,9 @@
                   <th>Usuario</th>
                   <th>Punto</th>
                   <th class="text-end">Total Pendiente</th>
-                  <th class="text-center">Paquetes</th>
+                  <th class="text-end">Recepciones</th>
+                  <th class="text-end">Entregas</th>
+                  <th class="text-center">Registros</th>
                   <th class="text-center">Acciones</th>
                 </tr>
               </thead>
@@ -72,19 +82,31 @@
                   </td>
                   <td class="text-end">
                     <span class="fs-5 fw-bold text-success">
-                      $ {{ item.total_costo_envio | number:'1.2-2' }}
+                      $ {{ item.total_pendiente | number:'1.2-2' }}
                     </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="text-info">
+                      $ {{ item.recepcion.total | number:'1.2-2' }}
+                    </div>
+                    <small class="text-muted">{{ item.recepcion.cantidad }} paq.</small>
+                  </td>
+                  <td class="text-end">
+                    <div class="text-primary">
+                      $ {{ item.entrega.total | number:'1.2-2' }}
+                    </div>
+                    <small class="text-muted">{{ item.entrega.cantidad }} paq.</small>
                   </td>
                   <td class="text-center">
                     <span class="badge bg-primary rounded-pill">
-                      {{ item.cantidad_paquetes }}
+                      {{ item.cantidad_registros }}
                     </span>
                   </td>
                   <td class="text-center">
                     <button
                       class="btn btn-sm btn-success"
                       (click)="abrirModalCierre(item)"
-                      [disabled]="item.cantidad_paquetes === 0"
+                      [disabled]="item.cantidad_registros === 0"
                     >
                       <i class="feather icon-check me-1"></i>
                       Cerrar Caja
@@ -129,7 +151,7 @@
         </div>
       </div>
       <hr>
-      <div class="row">
+      <div class="row mb-3">
         <div class="col-6">
           <strong>Total a entregar:</strong><br>
           <span class="fs-3 text-success fw-bold">
@@ -137,8 +159,21 @@
           </span>
         </div>
         <div class="col-6">
-          <strong>Paquetes:</strong><br>
-          <span class="fs-3">{{ usuarioSeleccionado.cantidad_paquetes }}</span>
+          <strong>Registros:</strong><br>
+          <span class="fs-3">{{ usuarioSeleccionado.cantidad_registros }}</span>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-6">
+          <small class="text-muted">Recepciones (envios):</small><br>
+          <span class="text-info fw-bold">$ {{ usuarioSeleccionado.recepcion.total | number:'1.2-2' }}</span>
+          <small class="text-muted ms-1">({{ usuarioSeleccionado.recepcion.cantidad }})</small>
+        </div>
+        <div class="col-6">
+          <small class="text-muted">Entregas (cobros):</small><br>
+          <span class="text-primary fw-bold">$ {{ usuarioSeleccionado.entrega.total | number:'1.2-2' }}</span>
+          <small class="text-muted ms-1">({{ usuarioSeleccionado.entrega.cantidad }})</small>
         </div>
       </div>
     </div>

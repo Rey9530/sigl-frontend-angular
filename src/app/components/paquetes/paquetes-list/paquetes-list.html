@@ -108,6 +108,22 @@
             </div>
           </div>
         </div>
+        <!-- Barra de acciones masivas -->
+        @if (paquetesSeleccionados.size > 0) {
+          <div class="card-body border-bottom bg-light py-2">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary fs-6">{{ paquetesSeleccionados.size }} seleccionado(s)</span>
+                <button class="btn btn-outline-secondary btn-sm" (click)="limpiarSeleccion()">
+                  <i class="fa fa-times me-1"></i> Limpiar
+                </button>
+              </div>
+              <button class="btn btn-primary btn-sm" (click)="abrirModalCambioMasivo()">
+                <i class="fa fa-exchange-alt me-1"></i> Cambiar Estado
+              </button>
+            </div>
+          </div>
+        }
         <div class="card-body">
           @if (loading) {
             <div class="text-center py-4">
@@ -120,6 +136,13 @@
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>
+                    <th style="width: 40px;">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               [checked]="seleccionarTodos"
+                               (change)="toggleSeleccionarTodos()">
+                      </div>
+                    </th>
                     <th>Codigo</th>
                     <th>Remitente</th>
                     <th>Destinatario</th>
@@ -133,7 +156,15 @@
                 </thead>
                 <tbody>
                   @for (paquete of paquetes; track paquete.id_paquete) {
-                    <tr>
+                    <tr [class.table-active]="isSeleccionado(paquete)">
+                      <td>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox"
+                                 [checked]="isSeleccionado(paquete)"
+                                 [disabled]="!puedeSeleccionar(paquete)"
+                                 (change)="toggleSeleccion(paquete)">
+                        </div>
+                      </td>
                       <td>
                         <span class="badge bg-light text-dark font-monospace">{{ paquete.codigo_rastreo }}</span>
                       </td>
@@ -182,7 +213,7 @@
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="9" class="text-center py-4">
+                      <td colspan="10" class="text-center py-4">
                         <i class="fa fa-box fa-3x text-muted mb-3"></i>
                         <p class="mb-0">No hay paquetes registrados</p>
                       </td>
@@ -210,6 +241,95 @@
            alt="Vineta"
            class="img-fluid"
            style="max-height: 80vh; width: auto;">
+    }
+  </div>
+</ng-template>
+
+<!-- Modal Cambio de Estado Masivo -->
+<ng-template #cambioEstadoMasivoModal>
+  <div class="modal-header">
+    <h5 class="modal-title"><i class="fa fa-exchange-alt me-2"></i>Cambio de Estado Masivo</h5>
+    <button type="button" class="btn-close" (click)="cerrarModalMasivo()"></button>
+  </div>
+  <div class="modal-body">
+    @if (!resultadosMasivos) {
+      <div class="alert alert-info mb-3">
+        <i class="fa fa-info-circle me-2"></i>
+        Se actualizarán <strong>{{ paquetesSeleccionados.size }}</strong> paquete(s)
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Nuevo Estado *</label>
+        <select class="form-select" [(ngModel)]="nuevoEstadoMasivo">
+          <option [ngValue]="null">Seleccione...</option>
+          @for (estado of estadosDisponiblesMasivo; track estado) {
+            <option [ngValue]="estado">{{ EstadoPaqueteLabels[estado] }}</option>
+          }
+        </select>
+        <small class="text-muted">Solo estados válidos para todos los seleccionados</small>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Comentario (opcional)</label>
+        <textarea class="form-control" rows="2" [(ngModel)]="comentarioMasivo"
+                  placeholder="Ej: Lote cargado en vehículo P123-456"></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Paquetes:</label>
+        <div class="border rounded p-2 bg-light" style="max-height: 120px; overflow-y: auto;">
+          @for (id of paquetesSeleccionados; track id) {
+            @if (getPaqueteById(id); as paq) {
+              <span class="badge bg-secondary me-1 mb-1">{{ paq.codigo_rastreo }}</span>
+            }
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="text-center">
+        @if (resultadosMasivos.fallidos === 0) {
+          <i class="fa fa-check-circle fa-4x text-success mb-3"></i>
+          <h5 class="text-success">Completado</h5>
+          <p>{{ resultadosMasivos.exitosos }} paquete(s) actualizados</p>
+        } @else if (resultadosMasivos.exitosos === 0) {
+          <i class="fa fa-times-circle fa-4x text-danger mb-3"></i>
+          <h5 class="text-danger">Error</h5>
+          <p>No se pudo actualizar ningún paquete</p>
+        } @else {
+          <i class="fa fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+          <h5 class="text-warning">Parcial</h5>
+          <p><span class="text-success">{{ resultadosMasivos.exitosos }} exitosos</span> |
+             <span class="text-danger">{{ resultadosMasivos.fallidos }} fallidos</span></p>
+        }
+
+        @if (resultadosMasivos.fallidos > 0) {
+          <div class="alert alert-danger text-start mt-3">
+            <strong>Errores:</strong>
+            <ul class="mb-0 mt-2 small">
+              @for (d of resultadosMasivos.detalles; track d.id_paquete) {
+                @if (!d.exitoso) {
+                  <li>{{ d.codigo_rastreo }}: {{ d.error }}</li>
+                }
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    }
+  </div>
+  <div class="modal-footer">
+    @if (!resultadosMasivos) {
+      <button class="btn btn-secondary" (click)="cerrarModalMasivo()">Cancelar</button>
+      <button class="btn btn-primary" (click)="confirmarCambioMasivo()"
+              [disabled]="procesandoCambioMasivo || !nuevoEstadoMasivo">
+        @if (procesandoCambioMasivo) {
+          <span class="spinner-border spinner-border-sm me-1"></span> Procesando...
+        } @else {
+          <i class="fa fa-check me-1"></i> Confirmar
+        }
+      </button>
+    } @else {
+      <button class="btn btn-primary" (click)="cerrarModalMasivo()">Cerrar</button>
     }
   </div>
 </ng-template>

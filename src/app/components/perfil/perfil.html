@@ -1,0 +1,113 @@
+<div class="container-fluid">
+  <div class="row">
+    <!-- Informacion del Usuario -->
+    <div class="col-12 col-lg-4 mb-4">
+      <div class="card">
+        <div class="card-body text-center">
+          <img src="assets/images/dashboard/profile.png" alt="profile" class="rounded-circle mb-3" style="width: 120px; height: 120px;">
+          <h5 class="mb-1">{{ currentUser?.nombre }}</h5>
+          <p class="text-muted mb-2">{{ currentUser?.email }}</p>
+          <span class="badge bg-primary">{{ currentUser?.rol }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formularios -->
+    <div class="col-12 col-lg-8">
+      <!-- Actualizar Nombre -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="mb-0"><i class="fa fa-user me-2"></i>Actualizar Nombre</h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()">
+            <div class="mb-3">
+              <label class="form-label">Nombre Completo *</label>
+              <input type="text" class="form-control" formControlName="nombre"
+                     placeholder="Ingrese su nombre completo"
+                     [class.is-invalid]="profileForm.controls['nombre'].touched && profileForm.controls['nombre'].errors">
+              @if (profileForm.controls['nombre'].touched && profileForm.controls['nombre'].errors?.['required']) {
+                <div class="text-danger small">El nombre es requerido</div>
+              }
+              @if (profileForm.controls['nombre'].touched && profileForm.controls['nombre'].errors?.['minlength']) {
+                <div class="text-danger small">El nombre debe tener al menos 2 caracteres</div>
+              }
+            </div>
+            <button type="submit" class="btn btn-primary" [disabled]="submittingProfile">
+              @if (submittingProfile) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Guardar Cambios
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Cambiar Contrasena -->
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0"><i class="fa fa-lock me-2"></i>Cambiar Contrasena</h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+            <div class="mb-3">
+              <label class="form-label">Contrasena Actual *</label>
+              <div class="input-group">
+                <input [type]="showCurrentPassword ? 'text' : 'password'" class="form-control"
+                       formControlName="password_actual" placeholder="Ingrese su contrasena actual"
+                       [class.is-invalid]="passwordForm.controls['password_actual'].touched && passwordForm.controls['password_actual'].errors">
+                <button type="button" class="btn btn-outline-secondary" (click)="toggleCurrentPassword()">
+                  <i class="fa" [class.fa-eye]="!showCurrentPassword" [class.fa-eye-slash]="showCurrentPassword"></i>
+                </button>
+              </div>
+              @if (passwordForm.controls['password_actual'].touched && passwordForm.controls['password_actual'].errors?.['required']) {
+                <div class="text-danger small">La contrasena actual es requerida</div>
+              }
+              @if (passwordForm.controls['password_actual'].touched && passwordForm.controls['password_actual'].errors?.['minlength']) {
+                <div class="text-danger small">La contrasena debe tener al menos 6 caracteres</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Nueva Contrasena *</label>
+              <div class="input-group">
+                <input [type]="showNewPassword ? 'text' : 'password'" class="form-control"
+                       formControlName="password_nueva" placeholder="Ingrese su nueva contrasena"
+                       [class.is-invalid]="passwordForm.controls['password_nueva'].touched && passwordForm.controls['password_nueva'].errors">
+                <button type="button" class="btn btn-outline-secondary" (click)="toggleNewPassword()">
+                  <i class="fa" [class.fa-eye]="!showNewPassword" [class.fa-eye-slash]="showNewPassword"></i>
+                </button>
+              </div>
+              @if (passwordForm.controls['password_nueva'].touched && passwordForm.controls['password_nueva'].errors?.['required']) {
+                <div class="text-danger small">La nueva contrasena es requerida</div>
+              }
+              @if (passwordForm.controls['password_nueva'].touched && passwordForm.controls['password_nueva'].errors?.['minlength']) {
+                <div class="text-danger small">La contrasena debe tener al menos 6 caracteres</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Confirmar Nueva Contrasena *</label>
+              <input type="password" class="form-control" formControlName="confirmar_password"
+                     placeholder="Confirme su nueva contrasena"
+                     [class.is-invalid]="passwordForm.controls['confirmar_password'].touched && passwordForm.controls['confirmar_password'].errors">
+              @if (passwordForm.controls['confirmar_password'].touched && passwordForm.controls['confirmar_password'].errors?.['required']) {
+                <div class="text-danger small">La confirmacion es requerida</div>
+              }
+              @if (passwordForm.controls['confirmar_password'].touched && passwordForm.controls['confirmar_password'].errors?.['minlength']) {
+                <div class="text-danger small">La contrasena debe tener al menos 6 caracteres</div>
+              }
+            </div>
+
+            <button type="submit" class="btn btn-warning" [disabled]="submittingPassword">
+              @if (submittingPassword) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Cambiar Contrasena
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -29,10 +29,28 @@
   }
 }
 
+// Fila seleccionada
+.table-active {
+  --bs-table-bg: rgba(var(--bs-primary-rgb), 0.08);
+}
+
+// Checkbox
+.form-check-input:disabled {
+  opacity: 0.4;
+}
+
 // Estilos para modo oscuro
 :host-context(body.dark-only) {
   .badge.bg-light {
     background-color: #374558 !important;
     color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .table-active {
+    --bs-table-bg: rgba(var(--bs-primary-rgb), 0.15);
+  }
+
+  .bg-light {
+    background-color: #374558 !important;
   }
 }

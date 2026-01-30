@@ -44,6 +44,7 @@ export class PaqueteDetalle implements OnInit {
   paquete: IPaqueteDetalle | null = null;
   loading = true;
   cambiandoEstado = false;
+  reimprimiendo = false;
 
   modalRef: NgbModalRef | null = null;
 
@@ -176,5 +177,27 @@ export class PaqueteDetalle implements OnInit {
       [EstadoPaquete.CANCELADO]: 'fa-times-circle'
     };
     return iconos[estado] || 'fa-circle';
+  }
+
+  puedeReimprimir(): boolean {
+    if (!this.paquete) return false;
+    return this.paquete.estado_actual !== EstadoPaquete.CANCELADO;
+  }
+
+  reimprimirVineta(): void {
+    if (!this.paquete) return;
+
+    this.reimprimiendo = true;
+    this.paquetesService.reimprimirVineta(this.paquete.id_paquete).subscribe({
+      next: (response) => {
+        this.toast.success(`Vineta enviada a imprimir en ${response.punto_impresion}`);
+        this.reimprimiendo = false;
+      },
+      error: (error) => {
+        const message = error.error?.message || 'Error al reimprimir vineta';
+        this.toast.error(message);
+        this.reimprimiendo = false;
+      }
+    });
   }
 }

@@ -21,11 +21,23 @@
           {{ EstadoPaqueteLabels[paquete.estado_actual] }}
         </span>
       </div>
-      @if (puedeEditarEstado()) {
-        <button class="btn btn-primary" (click)="abrirModalCambiarEstado()">
-          <i class="fa fa-exchange-alt me-1"></i> Cambiar Estado
-        </button>
-      }
+      <div class="d-flex gap-2">
+        @if (puedeReimprimir()) {
+          <button class="btn btn-outline-primary" (click)="reimprimirVineta()" [disabled]="reimprimiendo">
+            @if (reimprimiendo) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+            } @else {
+              <i class="fa fa-print me-1"></i>
+            }
+            Reimprimir Vineta
+          </button>
+        }
+        @if (puedeEditarEstado()) {
+          <button class="btn btn-primary" (click)="abrirModalCambiarEstado()">
+            <i class="fa fa-exchange-alt me-1"></i> Cambiar Estado
+          </button>
+        }
+      </div>
     </div>
 
     <div class="row">
@@ -130,7 +142,7 @@
           </div>
           <div class="card-body">
             <div class="timeline">
-              @for (historial of paquete.historial_estados; track historial.id_historial; let i = $index) {
+              @for (historial of paquete.historial_estados; track $index; let i = $index) {
                 <div class="timeline-item" [class.active]="i === 0">
                   <div class="timeline-marker">
                     <i class="fa" [ngClass]="getIconoEstado(historial.estado)"></i>

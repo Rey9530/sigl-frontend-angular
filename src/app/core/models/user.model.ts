@@ -16,3 +16,12 @@ export interface ILoginResponse {
   access_token: string;
   usuario: IUser;
 }
+
+export interface IUpdatePassword {
+  password_actual: string;
+  password_nueva: string;
+}
+
+export interface IUpdateProfile {
+  nombre: string;
+}

@@ -226,3 +226,37 @@ export interface IPaqueteEstadisticas {
     cantidad: number;
   }[];
 }
+
+/**
+ * DTO para cambio de estado masivo
+ */
+export interface ICambiarEstadoMasivo {
+  ids_paquete: number[];
+  nuevo_estado: EstadoPaquete;
+  comentario?: string;
+}
+
+/**
+ * Respuesta del cambio masivo
+ */
+export interface IResultadoCambioMasivo {
+  exitosos: number;
+  fallidos: number;
+  detalles: {
+    id_paquete: number;
+    codigo_rastreo: string;
+    exitoso: boolean;
+    estado_anterior?: string;
+    estado_nuevo?: string;
+    error?: string;
+  }[];
+}
+
+/**
+ * Respuesta de reimprimir vineta
+ */
+export interface IReimprimirVinetaResponse {
+  message: string;
+  codigo_rastreo: string;
+  punto_impresion: string;
+}

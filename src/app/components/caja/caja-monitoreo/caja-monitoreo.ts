@@ -33,7 +33,9 @@ export class CajaMonitoreo implements OnInit, OnDestroy {
 
   // Totales
   totalGeneral = 0;
-  totalPaquetes = 0;
+  totalRegistros = 0;
+  totalRecepcion = 0;
+  totalEntrega = 0;
 
   private destroy$ = new Subject<void>();
   private refreshInterval: any;
@@ -77,8 +79,16 @@ export class CajaMonitoreo implements OnInit, OnDestroy {
       (sum, u) => sum + u.total_pendiente,
       0
     );
-    this.totalPaquetes = this.resumenUsuarios.reduce(
-      (sum, u) => sum + u.cantidad_paquetes,
+    this.totalRegistros = this.resumenUsuarios.reduce(
+      (sum, u) => sum + u.cantidad_registros,
+      0
+    );
+    this.totalRecepcion = this.resumenUsuarios.reduce(
+      (sum, u) => sum + u.recepcion.total,
+      0
+    );
+    this.totalEntrega = this.resumenUsuarios.reduce(
+      (sum, u) => sum + u.entrega.total,
       0
     );
   }

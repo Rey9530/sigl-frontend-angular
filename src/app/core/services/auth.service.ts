@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { IUser, ILoginRequest, ILoginResponse } from '../models/user.model';
+import { IUser, ILoginRequest, ILoginResponse, IUpdatePassword, IUpdateProfile } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -70,5 +70,24 @@ export class AuthService {
   private getStoredUser(): IUser | null {
     const user = localStorage.getItem(this.USER_KEY);
     return user ? JSON.parse(user) : null;
+  }
+
+  cambiarPassword(data: IUpdatePassword): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(
+      `${environment.apiUrl}/auth/password`,
+      data
+    );
+  }
+
+  actualizarPerfil(data: IUpdateProfile): Observable<IUser> {
+    return this.http.patch<IUser>(
+      `${environment.apiUrl}/auth/perfil`,
+      data
+    ).pipe(
+      tap(user => {
+        this.setUser(user);
+        this.currentUserSubject.next(user);
+      })
+    );
   }
 }

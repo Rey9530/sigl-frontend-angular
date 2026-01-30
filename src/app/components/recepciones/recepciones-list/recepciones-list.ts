@@ -277,6 +277,15 @@ export class RecepcionesList implements OnInit, OnDestroy {
     });
   }
 
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    const placeholder = 'assets/images/placeholder.png';
+    // Evitar bucle infinito: solo cambiar si no es ya el placeholder
+    if (!img.src.endsWith(placeholder)) {
+      img.src = placeholder;
+    }
+  }
+
   puedeEditar(recepcion: IRecepcion): boolean {
     return recepcion.estado === EstadoRecepcion.PENDIENTE_REVISION ||
            recepcion.estado === EstadoRecepcion.REVISION_PARCIAL ||

@@ -4,6 +4,15 @@ import { Rol } from "../../core/models/usuario.model";
 
 export const content: Routes = [
   {
+    path: "perfil",
+    data: {
+      title: "Mi Perfil",
+      breadcrumb: "Perfil",
+    },
+    loadComponent: () =>
+      import("../../components/perfil/perfil").then((m) => m.Perfil),
+  },
+  {
     path: "home",
     data: {
       title: "Inicio",

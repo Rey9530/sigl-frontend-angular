@@ -12,7 +12,10 @@ import {
   IUpdateEstado,
   IPaquetesParams,
   IPaginatedPaquetes,
-  IPaqueteEstadisticas
+  IPaqueteEstadisticas,
+  ICambiarEstadoMasivo,
+  IResultadoCambioMasivo,
+  IReimprimirVinetaResponse
 } from '../models/paquete.model';
 
 @Injectable({
@@ -121,6 +124,13 @@ export class PaquetesService {
   }
 
   /**
+   * Cambia el estado de múltiples paquetes
+   */
+  cambiarEstadoMasivo(data: ICambiarEstadoMasivo): Observable<IResultadoCambioMasivo> {
+    return this.http.patch<IResultadoCambioMasivo>(`${this.baseUrl}/masivo/estado`, data);
+  }
+
+  /**
    * Obtiene estadisticas de paquetes
    */
   getEstadisticas(puntoId?: number): Observable<IPaqueteEstadisticas> {
@@ -129,5 +139,12 @@ export class PaquetesService {
       httpParams = httpParams.set('punto_id', puntoId.toString());
     }
     return this.http.get<IPaqueteEstadisticas>(`${this.baseUrl}/estadisticas`, { params: httpParams });
+  }
+
+  /**
+   * Reimprimir vineta de un paquete
+   */
+  reimprimirVineta(id: number): Observable<IReimprimirVinetaResponse> {
+    return this.http.post<IReimprimirVinetaResponse>(`${this.baseUrl}/${id}/reimprimir-vineta`, {});
   }
 }

@@ -1,13 +1,30 @@
+export type OrigenRecaudacion = 'RECEPCION' | 'ENTREGA';
+
+export interface IResumenRecepcion {
+  total: number;
+  costo_envio: number;
+  cantidad: number;
+}
+
+export interface IResumenEntrega {
+  total: number;
+  precio_producto: number;
+  costo_envio: number;
+  cantidad: number;
+}
+
 export interface IResumenCaja {
   usuario_id: number;
   usuario_nombre: string;
   punto_id: number;
   punto_nombre: string;
   punto_codigo?: string;
+  // Totales generales
   total_pendiente: number;
-  total_precio_producto: number;
-  total_costo_envio: number;
-  cantidad_paquetes: number;
+  cantidad_registros: number;
+  // Desglose por origen
+  recepcion: IResumenRecepcion;
+  entrega: IResumenEntrega;
 }
 
 export interface ICierreCaja {
@@ -32,6 +49,7 @@ export interface IRegistroRecaudacion {
   total: number;
   usuario_id: number;
   punto_id: number;
+  origen: OrigenRecaudacion;
   estado: 'PENDIENTE' | 'ENTREGADO' | 'ANULADO';
   creado_en: string;
   entregado_en?: string;
